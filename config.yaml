@@ -1,0 +1,11 @@
+mysql:
+  path: ""
+  port: "3306"
+  config: ""
+  db-name: "users"
+  username: "root"
+  password: ""
+  max-idle-conns: 10
+  max-open-conns: 100
+  log-mode: ""
+  lgo-zap: false
