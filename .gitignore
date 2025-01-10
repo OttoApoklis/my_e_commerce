@@ -1,0 +1,29 @@
+# 忽略 Git 自身目录
+/.git
+# 忽略 IDE 相关文件和目录
+.idea
+.DS_Store  # 针对 macOS 系统，用于忽略 Finder 创建的隐藏文件
+
+# 忽略编译生成文件
+*.class
+*.exe
+*.o
+*.out
+
+# 忽略日志文件
+*.log
+
+# 忽略临时文件
+*.tmp
+*~
+
+# 忽略虚拟环境目录（Python 等语言常用）
+venv
+env
+
+# 忽略 Node.js 的 node_modules 目录
+node_modules
+
+# 忽略数据库文件（如果项目有本地数据库相关文件）
+*.sqlite3
+*.db
