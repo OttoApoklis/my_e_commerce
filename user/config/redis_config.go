@@ -42,7 +42,7 @@ func GetRedis() *gorm.DB {
 
 func initRedis() (*gorm.DB, error) {
 	var config Config
-	file, err := os.Open("/users/archerxxu/Documents/UGit/src/my_e_commerce/config.yaml")
+	file, err := os.Open("config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}

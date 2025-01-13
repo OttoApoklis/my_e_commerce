@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"my_e_commerce/data/model"
@@ -70,27 +69,19 @@ func (h *UserHandler) SelectByUserId(c *gin.Context) {
 	c.JSON(200, users)
 }
 
-type UpdateRequest struct {
-	oldUser model.User `json:"olduser"`
-	user    model.User `json:"user"`
-}
-
 func (h *UserHandler) UpdateUserById(c *gin.Context) {
-	var updateRequest UpdateRequest
-	err := c.BindJSON(&updateRequest)
+	var user model.User
+	err := c.BindJSON(&user)
 	if err != nil {
 		log.Printf("unmarshal error, %+v", err)
 		c.JSON(400, gin.H{"error": "无效的用户数据"})
 		return
 	}
-	fmt.Printf("updateRequest: %+v\n", updateRequest)
-	fmt.Printf("oldusrname: %+v\n", updateRequest.oldUser)
-	fmt.Printf("usrname: %+v\n", updateRequest.user)
-	err = h.userService.UpdateUser(&updateRequest.oldUser, &updateRequest.user)
+	err = h.userService.UpdateUser(&user)
 	if err != nil {
 		log.Printf("sqlerror, %+v", err)
 		c.JSON(500, gin.H{"error": "用户信息更新失败"})
 		return
 	}
-	c.JSON(200, updateRequest.user)
+	c.JSON(200, user)
 }

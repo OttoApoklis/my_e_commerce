@@ -54,7 +54,7 @@ func (s *UserServiceImpl) CreateUser(user *model.User) error {
 	return nil
 }
 
-func (s *UserServiceImpl) UpdateUser(userOld *model.User, user *model.User) error {
+func (s *UserServiceImpl) UpdateUser(user *model.User) error {
 	defer func() {
 		err := recover()
 		if err != nil {
@@ -62,15 +62,13 @@ func (s *UserServiceImpl) UpdateUser(userOld *model.User, user *model.User) erro
 		}
 	}()
 	db := config.GetDB()
-	// 对比需要更新的字段
-	fmt.Println("compare")
-	fmt.Println(user.Username)
-	fmt.Println(userOld.Username)
-	updates := utils.CompareAndCollectionChanges(*userOld, *user)
-	fmt.Printf("updates : %+v", updates)
-
-	fmt.Println("database operate")
-	err := db.Model(updates).Where("id = ?", user.ID).Error
+	var userOld model.User
+	err := db.Select("id", "username", "email", "first_name", "last_Name").Where("id = ?", user.ID).Find(&userOld).Error
+	if err != nil {
+		return err
+	}
+	updates := utils.CompareAndCollectionChanges(userOld, *user)
+	err = db.Model(updates).Where("id = ?", user.ID).Error
 
 	if err != nil {
 		log.Printf("user update err : %+v", err)

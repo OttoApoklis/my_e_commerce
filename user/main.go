@@ -1,8 +1,6 @@
 package main
 
-import (
-	"my_e_commerce/redis"
-)
+import "my_e_commerce/routes"
 
 // 更新会覆盖原有文件，所以通过 g.GenerateModel("oss", fieldOpts...) 指定需要更新的表，不要全部覆盖
 
@@ -11,10 +9,9 @@ const DBDSN = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parseTime=True
 const MySQLDSN_USERS = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parseTime=True&loc=Local"
 
 func main() {
-	redis.TestRedis()
-	//router := routes.SetupRouter()
-	//router.Run(":8080")
-	//controller.UserController()
+	//redis.TestRedis()
+	router := routes.SetupRouter()
+	router.Run(":8080")
 }
 
 //func main() {

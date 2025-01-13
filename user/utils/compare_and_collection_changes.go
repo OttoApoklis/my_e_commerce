@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"fmt"
+	"log"
 	"reflect"
 )
 
@@ -9,7 +9,7 @@ func CompareAndCollectionChanges(oldObj, newObj interface{}) map[string]interfac
 	defer func() {
 		err := recover()
 		if err != nil {
-			fmt.Printf("err %+v", err)
+			log.Printf("err %+v", err)
 		}
 	}()
 	oldValue := reflect.ValueOf(oldObj)
@@ -21,8 +21,6 @@ func CompareAndCollectionChanges(oldObj, newObj interface{}) map[string]interfac
 	for i := 0; i < oldValue.NumField(); i++ {
 		oldField := oldValue.Field(i)
 		newField := newValue.Field(i)
-		fmt.Println(oldField)
-		fmt.Println(newField)
 		if !reflect.DeepEqual(oldField.Interface(), newField.Interface()) {
 			filedName := newValue.Type().Field(i).Name
 			changes[filedName] = newField.Interface()

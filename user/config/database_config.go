@@ -42,7 +42,7 @@ func GetDB() *gorm.DB {
 
 func initDatabase() (*gorm.DB, error) {
 	var config Config
-	file, err := os.Open("/users/archerxxu/Documents/UGit/src/my_e_commerce/config.yaml")
+	file, err := os.Open("config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,15 +57,12 @@ func initDatabase() (*gorm.DB, error) {
 	}()
 	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(&config)
-	fmt.Println(config.Database.Host)
 	if err != nil {
 		log.Fatal(err)
 	}
 	dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=%s&parseTime=True",
 		config.Database.User, config.Database.Password, config.Database.Host,
 		config.Database.Port, config.Database.Dbname, config.Database.Charset)
-	//dsn = "root:@(localhost:3306)/users?charset=utf8mb4&parseTime=True"
-	fmt.Println(dsn)
 	var db *gorm.DB
 	// 建立数据库连接
 	db, err = gorm.Open(mysql.New(mysql.Config{
