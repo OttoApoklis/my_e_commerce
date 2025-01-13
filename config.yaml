@@ -6,3 +6,9 @@ database:
   password: ""
   dbname: "users"
   charset: "utf8mb4"
+redis:
+  host: "localhost"
+  port: 6379
+  user: "root"
+  passwd: ""
+  dbname: 0
