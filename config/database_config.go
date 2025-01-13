@@ -10,14 +10,12 @@ import (
 )
 
 type DatabaseConfig struct {
-	Host      string `yaml:"host"`
-	Port      int    `yaml:"port"`
-	User      string `yaml:"user"`
-	Password  string `yaml:"password"`
-	Dbname    string `yaml:"dbname"`
-	Charset   string `yaml:"charset"`
-	ParseTime bool   `yaml:"parseTime"`
-	Loc       string `yaml:"loc"`
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	User     string `yaml:"user"`
+	Password string `yaml:"password"`
+	Dbname   string `yaml:"dbname"`
+	Charset  string `yaml:"charset"`
 }
 
 type Config struct {
@@ -44,7 +42,7 @@ func GetDB() *gorm.DB {
 
 func initDatabase() (*gorm.DB, error) {
 	var config Config
-	file, err := os.Open("./config.yaml")
+	file, err := os.Open("/users/archerxxu/Documents/UGit/src/my_e_commerce/config.yaml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,14 +57,14 @@ func initDatabase() (*gorm.DB, error) {
 	}()
 	decoder := yaml.NewDecoder(file)
 	err = decoder.Decode(&config)
+	fmt.Println(config.Database.Host)
 	if err != nil {
 		log.Fatal(err)
 	}
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&loc=%s",
+	dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=%s&parseTime=True",
 		config.Database.User, config.Database.Password, config.Database.Host,
-		config.Database.Port, config.Database.Dbname, config.Database.Charset,
-		config.Database.ParseTime, config.Database.Loc)
-	dsn = "root:@(localhost:3306)/users?charset=utf8mb4&parseTime=True"
+		config.Database.Port, config.Database.Dbname, config.Database.Charset)
+	//dsn = "root:@(localhost:3306)/users?charset=utf8mb4&parseTime=True"
 	fmt.Println(dsn)
 	var db *gorm.DB
 	// 建立数据库连接

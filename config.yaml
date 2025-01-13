@@ -1,10 +1,8 @@
-mysql:
+database:
   host: "localhost"
   port: 3306
   config: ""
-  user: "users"
-  password: "root"
+  user: "root"
+  password: ""
   dbname: "users"
   charset: "utf8mb4"
-  parseTime: True
-  loc: "Loc"
