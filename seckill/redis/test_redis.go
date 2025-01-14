@@ -12,7 +12,7 @@ import (
 
 var ctx = context.Background()
 
-func TestRedis2() {
+func TestRedis() {
 	// 连接到Redis服务器
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379", // 根据实际情况修改

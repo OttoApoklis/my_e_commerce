@@ -165,3 +165,10 @@
 
 ## go get github.com/google/wire/cmd/wire@latest
 
+# TODO
+# today
+# 修复bug
+# 
+# 整合mq
+# 整合redis
+# 整合nacos或etdc

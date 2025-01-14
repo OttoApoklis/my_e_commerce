@@ -16,7 +16,7 @@ create table `seckill_record` (
                                     `goods_id`                  bigint(20) not null  comment '商品ID',
                                     `sec_num`               varchar(128)                         comment '秒杀号',
                                     `order_num`               varchar(128)                         comment '订单号',
-                                    `price`                 int(11)      not null                comment '金额',
+                                    `price`                 decimal      not null                comment '金额',
                                     `status`                 int(11)      not null                comment '状态',
                                     `create_time`         datetime     not null DEFAULT CURRENT_TIMESTAMP                             comment '创建时间',
                                     `modify_time`         datetime     not null DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP comment '修改时间',
@@ -24,15 +24,15 @@ create table `seckill_record` (
                                     UNIQUE KEY `idx_secnum` (`sec_num`),
                                     UNIQUE KEY `idx_ordernum` (`order_num`),
                                     KEY `idx_userid` (`user_id`),
-                                    KEY `idx_userid_create` (`userid`, `create_time`, `sec_num`, `order_num`,`goods_id`) -- 考虑需要根据用户查询订单并按创建时间排序，查询信息包含订单创建时间、商品信息、订单信息和秒杀信息，这样设计可以减少回表
+                                    KEY `idx_userid_create` (`user_id`, `create_time`, `sec_num`, `order_num`,`goods_id`) -- 考虑需要根据用户查询订单并按创建时间排序，查询信息包含订单创建时间、商品信息、订单信息和秒杀信息，这样设计可以减少回表
 )ENGINE=InnoDB  default CHARSET=utf8mb4 comment '秒杀记录表' ;
 
 
 create table `goods` (
-                           `id`                  bigint(20)       not null AUTO_INCREMENT comment '',
+                           `id`                  bigint(20)       not null AUTO_INCREMENT comment 'ID',
                            `goods_num`               varchar(128)                         comment '商品编号',
                            `goods_name`               varchar(128)                         comment '商品名字',
-                           `price`                 float      not null                comment '价格',
+                           `price`                 decimal      not null                comment '商品单价',
                            `pic_url`               varchar(128)                         comment '商品图片',
                            `seller`                  bigint(20)  not null comment '卖家ID',
                            `create_time`         datetime     not null DEFAULT CURRENT_TIMESTAMP                             comment '创建时间',
@@ -49,8 +49,8 @@ create table `order` (
                            `goods_id`                  bigint(20) not null  comment '商品ID',
                            `goods_num`               varchar(128)                         comment '商品编号',
                            `order_num`               varchar(128)                         comment '订单号',
-                           `goods_num`              int(11)                            comment '商品数量',
-                           `price`                 int(11)      not null                comment '金额',
+                           `goods_amount`              int(11)                            comment '商品数量',
+                           `price`                 decimal     not null                comment '金额',
                            `status`                 int(11)      not null                comment '状态',
                            `create_time`         datetime     not null DEFAULT CURRENT_TIMESTAMP                             comment '创建时间',
                            `modify_time`         datetime     not null DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP comment '修改时间',

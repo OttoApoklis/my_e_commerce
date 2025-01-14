@@ -1,0 +1,14 @@
+database:
+  host: "localhost"
+  port: 3306
+  config: ""
+  user: "root"
+  password: ""
+  dbname: "seckill"
+  charset: "utf8mb4"
+redis:
+  host: "localhost"
+  port: 6379
+  user: "root"
+  passwd: ""
+  dbname: 0

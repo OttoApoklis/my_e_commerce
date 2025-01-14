@@ -1,7 +1,6 @@
 package main
 
 import (
-	"my_e_commerce/redis"
 	"my_e_commerce/routes"
 )
 
@@ -13,38 +12,37 @@ const MySQLDSN_USERS = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parse
 
 func main() {
 	//redis.TestRedis()
-	redis.()
 	router := routes.SetupRouter()
-	router.Run(":8080")
+	router.Run(":8081")
 }
 
-//func main() {
-//	// 配置数据库连接字符串，替换为实际的用户名、密码、数据库名等信息
-//	dsn := "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parseTime=True&loc=Local"
-//	var db *gorm.DB
-//	var err error
-//	// 建立数据库连接
-//	db, err = gorm.Open(mysql.New(mysql.Config{
-//		DSN:                       dsn,
-//		SkipInitializeWithVersion: true,
-//	}), &gorm.Config{})
-//	if err != nil {
-//		panic(err)
-//	}
-//	// 创建User结构体实例
-//	user := model.User{
-//		Username:     "test_user",
-//		Email:        "test@example.com",
-//		PasswordHash: "hashed_password",
-//		FirstName:    func() *string { s := "John"; return &s }(),
-//		LastName:     func() *string { s := "Doe"; return &s }(),
-//	}
+//	func main() {
+//		// 配置数据库连接字符串，替换为实际的用户名、密码、数据库名等信息
+//		dsn := "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parseTime=True&loc=Local"
+//		var db *gorm.DB
+//		var err error
+//		// 建立数据库连接
+//		db, err = gorm.Open(mysql.New(mysql.Config{
+//			DSN:                       dsn,
+//			SkipInitializeWithVersion: true,
+//		}), &gorm.Config{})
+//		if err != nil {
+//			panic(err)
+//		}
+//		// 创建User结构体实例
+//		user := model.User{
+//			Username:     "test_user",
+//			Email:        "test@example.com",
+//			PasswordHash: "hashed_password",
+//			FirstName:    func() *string { s := "John"; return &s }(),
+//			LastName:     func() *string { s := "Doe"; return &s }(),
+//		}
 //
-//	// 假设还有其他函数用于将user结构体实例插入到数据库等操作，这里只是示意
-//	db.Save(&user)
+//		// 假设还有其他函数用于将user结构体实例插入到数据库等操作，这里只是示意
+//		db.Save(&user)
 //
-//}
-
+// }
+//
 // 生成数据库对应的结构体
 //func main() {
 //	cfg := gen.Config{
