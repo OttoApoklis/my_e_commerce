@@ -48,6 +48,7 @@ create table `order` (
                            `goods_id`                  bigint(20) not null  comment '商品ID',
                            `goods_num`               varchar(128)                         comment '商品编号',
                            `order_num`               varchar(128)                         comment '订单号',
+                           `goods_num`              int(11)                            comment '商品数量',
                            `price`                 int(11)      not null                comment '金额',
                            `status`                 int(11)      not null                comment '状态',
                            `create_time`         datetime     not null DEFAULT CURRENT_TIMESTAMP                             comment '创建时间',

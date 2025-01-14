@@ -156,3 +156,12 @@
 
 ## 工作进度
     目前实现进度到用户模块, 目前使用gorm操作数据库还不熟悉
+
+
+# kratos 容易上手的开源go微服务框架
+## https://go-kratos.dev/docs/intro/design
+## go install github.com/go-kratos/kratos/cmd/kratos/v2@latest
+
+
+## go get github.com/google/wire/cmd/wire@latest
+
