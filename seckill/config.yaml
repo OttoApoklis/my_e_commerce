@@ -3,7 +3,7 @@ database:
   port: 3306
   config: ""
   user: "root"
-  password: ""
+  password: "123456"
   dbname: "seckill"
   charset: "utf8mb4"
 redis:

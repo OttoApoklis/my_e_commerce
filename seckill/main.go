@@ -1,6 +1,7 @@
 package main
 
 import (
+	redis_test "my_e_commerce/redis_init"
 	"my_e_commerce/routes"
 )
 
@@ -12,6 +13,7 @@ const MySQLDSN_USERS = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parse
 
 func main() {
 	//redis.TestRedis()
+	redis_test.RedisInit()
 	router := routes.SetupRouter()
 	router.Run(":8081")
 }
