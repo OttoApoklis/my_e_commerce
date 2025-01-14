@@ -23,7 +23,8 @@ create table `seckill_record` (
                                     PRIMARY KEY (`id`),
                                     UNIQUE KEY `idx_secnum` (`sec_num`),
                                     UNIQUE KEY `idx_ordernum` (`order_num`),
-                                    KEY `idx_userid` (`user_id`)
+                                    KEY `idx_userid` (`user_id`),
+                                    KEY `idx_userid_create` (`userid`, `create_time`, `sec_num`, `order_num`,`goods_id`) -- 考虑需要根据用户查询订单并按创建时间排序，查询信息包含订单创建时间、商品信息、订单信息和秒杀信息，这样设计可以减少回表
 )ENGINE=InnoDB  default CHARSET=utf8mb4 comment '秒杀记录表' ;
 
 
