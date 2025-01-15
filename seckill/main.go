@@ -1,8 +1,8 @@
 package main
 
 import (
+	redis_test "my_e_commerce/redis_init"
 	"my_e_commerce/routes"
-	"my_e_commerce/utils"
 )
 
 // 更新会覆盖原有文件，所以通过 g.GenerateModel("oss", fieldOpts...) 指定需要更新的表，不要全部覆盖
@@ -13,7 +13,7 @@ const MySQLDSN_USERS = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parse
 
 func main() {
 	//redis.TestRedis()
-	utils.TestCopy()
+	redis_test.RedisInit()
 	router := routes.SetupRouter()
 	router.Run(":8081")
 }

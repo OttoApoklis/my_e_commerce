@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
+	"golang.org/x/net/context"
+	"io/ioutil"
 	"log"
+	"my_e_commerce/config"
 	model2 "my_e_commerce/data/req"
 	service "my_e_commerce/data/response"
 	service2 "my_e_commerce/service"
 	"my_e_commerce/utils"
+	"strconv"
 )
 
 type SeckillHandler struct {
@@ -48,7 +52,36 @@ func (h *SeckillHandler) CreateSeckill(c *gin.Context) {
 		c.JSON(service.ERR_JSON_BIND, service.GetResponse(service.GetErrMsg(service.ERR_JSON_BIND), nil))
 		return
 	}
+	// 校验参数
+	if seckillReq.GoodsAmount <= 0 {
+		c.JSON(service.ERR_INPUT_INVALID, service.GetResponse(service.GetErrMsg(service.ERR_INPUT_INVALID), nil))
+	}
 	// TODO 先去查redis库存数据
+	// 读取.lua 文件的内容
+	scriptBytes, err := ioutil.ReadFile("./lua/redis_substock.lua")
+	if err != nil {
+		fmt.Println("Error reading Lua script file:", err)
+		return
+	}
+	script := string(scriptBytes)
+	fmt.Printf("\n\n\nscript:" + script + "\n")
+	rdb, err := config.GetRedisConnection()
+	if err != nil {
+		fmt.Println("Error GetRedisConnection:", err)
+		return
+	}
+	ctx := context.Background()
+	stock := rdb.Get(ctx, strconv.Itoa(int(seckillReq.GoodsID)))
+	fmt.Printf("redis stock : %+v\n", stock)
+
+	result, err := rdb.Eval(ctx, script, []string{strconv.Itoa(int(seckillReq.GoodsID))}, seckillReq.GoodsAmount).Result()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	stock = rdb.Get(ctx, strconv.Itoa(int(seckillReq.GoodsID)))
+	fmt.Printf("redis stock : %+v\n", stock)
+	fmt.Printf("redis subStock result: %+v", result)
 	// 数据库扣库存
 	ok, err := h.stockService.SubStock(seckillReq.GoodsID, seckillReq.GoodsAmount)
 	if err != nil {
