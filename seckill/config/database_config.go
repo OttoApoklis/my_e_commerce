@@ -2,13 +2,14 @@ package config
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 	"log"
 	"os"
 	"sync"
 	"time"
+
+	"gopkg.in/yaml.v3"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 var (

@@ -2,9 +2,10 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/streadway/amqp"
 	"log"
 	model "my_e_commerce/data/req"
+
+	"github.com/streadway/amqp"
 )
 
 func failOnError(err error, msg string) {

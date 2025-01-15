@@ -1,11 +1,12 @@
 package redis_test
 
 import (
-	"golang.org/x/net/context"
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 	"strconv"
+
+	"golang.org/x/net/context"
 )
 
 func RedisInit() {

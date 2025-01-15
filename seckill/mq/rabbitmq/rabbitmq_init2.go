@@ -2,11 +2,12 @@ package rabbitmq
 
 import (
 	"encoding/json"
-	"github.com/streadway/amqp"
-	"golang.org/x/time/rate"
 	"log"
 	model "my_e_commerce/data/req"
 	"time"
+
+	"github.com/streadway/amqp"
+	"golang.org/x/time/rate"
 )
 
 // 发送函数

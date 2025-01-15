@@ -3,11 +3,6 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/shopspring/decimal"
-	"github.com/streadway/amqp"
-	"golang.org/x/net/context"
-	"golang.org/x/time/rate"
 	"io/ioutil"
 	"log"
 	"my_e_commerce/config"
@@ -16,6 +11,12 @@ import (
 	service2 "my_e_commerce/service"
 	"my_e_commerce/utils"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
+	"github.com/streadway/amqp"
+	"golang.org/x/net/context"
+	"golang.org/x/time/rate"
 )
 
 type SeckillHandler struct {

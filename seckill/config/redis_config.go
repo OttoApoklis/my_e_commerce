@@ -3,9 +3,10 @@ package config
 import (
 	"context"
 	"fmt"
+	"log"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
-	"log"
 )
 
 type RedisConfig struct {

@@ -1,9 +1,10 @@
 package serviceImpl
 
 import (
-	"gorm.io/gorm"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
+
+	"gorm.io/gorm"
 )
 
 type StockServiceImpl struct{}

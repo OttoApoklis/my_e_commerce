@@ -1,11 +1,12 @@
 package setup_mq
 
 import (
-	"golang.org/x/time/rate"
 	"my_e_commerce/config"
 	"my_e_commerce/controller"
 	"my_e_commerce/service/serviceImpl"
 	"time"
+
+	"golang.org/x/time/rate"
 )
 
 func SetupMQ() {

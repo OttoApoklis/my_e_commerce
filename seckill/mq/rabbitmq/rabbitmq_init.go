@@ -1,9 +1,10 @@
 package rabbitmq
 
 import (
+	"log"
+
 	"github.com/streadway/amqp"
 	"golang.org/x/time/rate"
-	"log"
 )
 
 func failOnError(err error, msg string) {

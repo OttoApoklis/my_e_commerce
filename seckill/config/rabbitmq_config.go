@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/streadway/amqp"
 	"log"
+
+	"github.com/streadway/amqp"
 )
 
 func GetRabbitmqConnection() *amqp.Connection {

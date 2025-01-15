@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
 	"log"
 	"my_e_commerce/data/model"
 	"my_e_commerce/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 //	func UserController() {
