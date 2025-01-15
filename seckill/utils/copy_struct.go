@@ -73,7 +73,7 @@ type OrderReq struct {
 	Details string
 }
 
-func main() {
+func TestCopy() {
 	srcOrder := &OrderReq{
 		ID:      10,
 		Details: "Sample order",

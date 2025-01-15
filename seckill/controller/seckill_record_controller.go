@@ -77,14 +77,16 @@ func (h *SeckillHandler) CreateSeckill(c *gin.Context) {
 	fmt.Printf("good : %+v\n", good)
 	orderReq.GoodsID = seckillReq.GoodsID
 	orderReq.GoodsNum = good.GoodsNum
-	orderReq.Price = 18
+	orderReq.Price = 18.00
 	orderReq.Status = 0
 	orderReq.GoodsAmount = &seckillReq.GoodsAmount
 	orderReq.Buyer = uint32(userID)
+	orderReq.Seller = good.Seller
 	fmt.Printf("orderReq : %+v\n", orderReq)
 	var orderID uint32
 	orderID, err = h.orderService.CreateOrder(orderReq)
 	if err != nil {
+		log.Fatalln(err)
 		c.JSON(service.ERR_CREATE_ORDER_FAILED, service.GetResponse(service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED), nil))
 		return
 	}

@@ -5,6 +5,7 @@
 package model
 
 import (
+	"github.com/shopspring/decimal"
 	"time"
 )
 
@@ -19,7 +20,7 @@ type Order struct {
 	GoodsNum    *string   `gorm:"column:goods_num;type:varchar(128);comment:商品编号" json:"goods_num"`                                    // 商品编号
 	OrderNum    *string   `gorm:"column:order_num;type:varchar(128);comment:订单号" json:"order_num"`                                     // 订单号
 	GoodsAmount *uint32   `gorm:"column:goods_amount;type:int;comment:商品数量" json:"goods_amount"`                                       // 商品数量
-	Price       float64   `gorm:"column:price;type:decimal(10,0);not null;comment:金额" json:"price"`                                    // 金额
+	Price       decimal.Decimal   `gorm:"column:price;type:decimal(10,2);not null;comment:金额" json:"price"`                                    // 金额
 	Status      uint32    `gorm:"column:status;type:int;not null;comment:状态" json:"status"`                                            // 状态
 	CreateTime  time.Time `gorm:"column:create_time;type:datetime;not null;default:CURRENT_TIMESTAMP;comment:创建时间" json:"create_time"` // 创建时间
 	ModifyTime  time.Time `gorm:"column:modify_time;type:datetime;not null;default:CURRENT_TIMESTAMP;comment:修改时间" json:"modify_time"` // 修改时间

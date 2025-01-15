@@ -34,8 +34,8 @@ func (s *OrderServiceImpl) CreateOrder(order model.OrderReq) (uint32, error) {
 	db := config.GetDB()
 	var orderInsert model2.Order
 	fmt.Printf("order %+v", order)
-	utils.CopyStruct(order, orderInsert)
-	fmt.Printf("orderInsert %+v", order)
+	utils.CopyStruct(&order, &orderInsert)
+	fmt.Printf("orderInsert %+v", orderInsert)
 	tx := db.Save(&orderInsert)
 	return orderInsert.ID, tx.Error
 }
