@@ -1,13 +1,15 @@
 package response
 
 type Response struct {
-	message string
-	data    interface{}
+	Code    int
+	Message string
+	Data    interface{}
 }
 
-func GetResponse(message string, data interface{}) Response {
+func GetResponse(code int, message string, data interface{}) Response {
 	response := Response{}
-	response.message = message
-	response.data = data
+	response.Code = code
+	response.Message = message
+	response.Data = data
 	return response
 }

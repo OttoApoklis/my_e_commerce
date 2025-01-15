@@ -1,13 +1,11 @@
 package redis_test
 
 import (
-	"fmt"
 	"golang.org/x/net/context"
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 	"strconv"
-	"time"
 )
 
 func RedisInit() {
@@ -16,9 +14,6 @@ func RedisInit() {
 	if err != nil {
 		log.Fatal("redis connection Error!")
 	}
-	rdb.Set(ctx, "key", "value", 10*time.Second)
-	value := rdb.Get(ctx, "key")
-	fmt.Printf("redis value: %+v", value)
 	// 连接数据库加载库存信息
 	db := config.GetDB()
 	var seckillStocks []model.SeckillStock

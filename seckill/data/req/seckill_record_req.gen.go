@@ -4,6 +4,7 @@
 
 package model
 
+import "github.com/shopspring/decimal"
 
 const TableNameSeckillRecord = "seckill_record"
 
@@ -14,7 +15,7 @@ type SeckillRecordReq struct {
 	GoodsID    uint32    `gorm:"column:goods_id;type:bigint;not null;comment:商品ID" json:"goods_id"`                                   // 商品ID
 	SecNum     *string   `gorm:"column:sec_num;type:varchar(128);comment:秒杀号" json:"sec_num"`                                         // 秒杀号
 	OrderNum   *string   `gorm:"column:order_num;type:varchar(128);comment:订单号" json:"order_num"`                                     // 订单号
-	Price      float32    `gorm:"column:price;type:int;not null;comment:金额" json:"price"`                                              // 金额
+	Price      decimal.Decimal    `gorm:"column:price;type:int;not null;comment:金额" json:"price"`                                              // 金额
 	Status     uint32    `gorm:"column:status;type:int;not null;comment:状态" json:"status"`                                            // 状态
 }
 
