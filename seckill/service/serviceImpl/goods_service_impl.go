@@ -1,6 +1,8 @@
 package serviceImpl
 
 import (
+	"errors"
+	"gorm.io/gorm"
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
@@ -10,13 +12,24 @@ import (
 type GoodsServiceImpl struct {
 }
 
-func (s *GoodsServiceImpl) CreateGoods(goodsReq *model2.GoodsReq) error {
-	//TODO implement me
-	panic("implement me")
-}
+func NewGoodsServiceImpl() *GoodsServiceImpl { return &GoodsServiceImpl{} }
 
-func NewGoodsServiceImpl() *GoodsServiceImpl {
-	return &GoodsServiceImpl{}
+func (s *GoodsServiceImpl) CreateGoods(db *gorm.DB, goods *model.Good) error {
+	var goodss []model.Good
+	if err := db.Where("goods_num", goods.GoodsNum).Find(&goodss).Error; err != nil {
+		log.Printf("err from quota find in createGoods: %+v", err)
+		return err
+	}
+	if goodss != nil && len(goodss) != 0 {
+		log.Printf("err from goods create because of repeateable")
+		return errors.New("repeatable in goods create")
+	}
+	err := db.Save(goods).Error
+	if err != nil {
+		log.Printf("error from Goods create: %+v", err)
+		return err
+	}
+	return nil
 }
 
 func (s *GoodsServiceImpl) GetGoods(goodsId uint32) ([]model.Good, error) {
@@ -32,4 +45,35 @@ func (s *GoodsServiceImpl) GetGoods(goodsId uint32) ([]model.Good, error) {
 		log.Printf("Get Goods is nil")
 	}
 	return goods, nil
+}
+
+func (s *GoodsServiceImpl) UpdateGoods(db *gorm.DB, req *model2.GoodsReq) error {
+	var goods model2.GoodsReq
+	goods = *req
+	dbMessage := db.Model(&model.Good{}).
+		Where("goods_id = ?", *goods.GoodsNum).
+		Limit(1).
+		Update("price", goods.Price)
+	if dbMessage.RowsAffected == 0 {
+		return errors.New("查不到该数据")
+	}
+	err := dbMessage.Error
+	if err != nil {
+		log.Printf("error from Goods update: %+v", err)
+		return err
+	}
+	return nil
+}
+
+func (s *GoodsServiceImpl) DeleteGoodsById(db *gorm.DB, ID uint32) error {
+	dbMessage := db.Where("id = ?", ID).Delete(&model.Good{})
+	if dbMessage.RowsAffected == 0 {
+		log.Printf("rows affected is zero in DeleteGoodsById")
+		return errors.New("查不到数据")
+	}
+	err := dbMessage.Error
+	if err != nil {
+		log.Printf("error from Goods delete: %+v", err)
+	}
+	return nil
 }

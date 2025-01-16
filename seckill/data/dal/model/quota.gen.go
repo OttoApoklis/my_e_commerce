@@ -5,6 +5,7 @@
 package model
 
 import (
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type Quotum struct {
 	Num        uint32    `gorm:"column:num;type:int;not null;comment:限额" json:"num"`                                                  // 限额
 	CreateTime time.Time `gorm:"column:create_time;type:datetime;not null;default:CURRENT_TIMESTAMP;comment:创建时间" json:"create_time"` // 创建时间
 	ModifyTime time.Time `gorm:"column:modify_time;type:datetime;not null;default:CURRENT_TIMESTAMP;comment:修改时间" json:"modify_time"` // 修改时间
+	DeletedAt  gorm.DeletedAt `gorm:"column:deleted_at;type:datetime;comment:软删除，标记时间可用于恢复" json:"deleted_at"`                             // 软删除，标记时间可用于恢复
 }
 
 // TableName Quotum's table name

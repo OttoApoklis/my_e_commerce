@@ -5,6 +5,7 @@
 package model
 
 import (
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -19,6 +20,7 @@ type UserQuotum struct {
 	KilledNum  uint32    `gorm:"column:killed_num;type:int;not null;comment:已经消耗的额度" json:"killed_num"`                               // 已经消耗的额度
 	CreateTime time.Time `gorm:"column:create_time;type:datetime;not null;default:CURRENT_TIMESTAMP;comment:创建时间" json:"create_time"` // 创建时间
 	ModifyTime time.Time `gorm:"column:modify_time;type:datetime;not null;default:CURRENT_TIMESTAMP;comment:修改时间" json:"modify_time"` // 修改时间
+	DeletedAt  gorm.DeletedAt `gorm:"column:deleted_at;type:date;comment:软删除，标记时间可用于恢复" json:"deleted_at"`                                 // 软删除，标记时间可用于恢复
 }
 
 // TableName UserQuotum's table name

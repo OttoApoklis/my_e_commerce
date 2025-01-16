@@ -74,7 +74,7 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 	conn, _ = amqp.Dial("amqp://guest:guest@localhost:5672/")
 	ch, err := conn.Channel()
 	if err != nil {
-		log.Fatalf("mq err1 : %+v", err)
+		log.Printf("mq err1 : %+v", err)
 	}
 	defer ch.Close()
 
@@ -87,7 +87,7 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 		nil,       // arguments
 	)
 	if err != nil {
-		log.Fatalf("mq err2 : %+v", err)
+		log.Printf("mq err2 : %+v", err)
 	}
 
 	msgs, err := ch.Consume(
@@ -100,7 +100,7 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 		nil,    // args
 	)
 	if err != nil {
-		log.Fatalf("mq err3 : %+v", err)
+		log.Printf("mq err3 : %+v", err)
 	}
 
 	limiter := rate.NewLimiter(limit, 1)
@@ -110,7 +110,7 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 			var data model2.SeckillReq
 			err = json.Unmarshal(d.Body, &data)
 			if err != nil {
-				log.Fatalf("Failed to unmarshal data : %+v", err)
+				log.Printf("Failed to unmarshal data : %+v", err)
 			}
 			log.Printf("Received: %+v", data)
 			h.CreateSeckillByRabbitmq(data)
@@ -145,11 +145,11 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	// 数据库扣库存
 	ok, err := h.stockService.SubStock(seckillReq.GoodsID, seckillReq.GoodsAmount)
 	if err != nil {
-		log.Fatalf("this is err , %+v\n", err)
+		log.Printf("this is err , %+v\n", err)
 		return
 	}
 	if !ok {
-		log.Fatalf("%s\n", service.GetErrMsg(service.ERR_DESC_STOCK_FAILED))
+		log.Printf("%s\n", service.GetErrMsg(service.ERR_DESC_STOCK_FAILED))
 	}
 	// 创建订单
 	var orderReq model2.OrderReq
@@ -160,10 +160,10 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	// 查询商品信息
 	goods, err := h.goodsService.GetGoods(seckillReq.GoodsID)
 	if err != nil {
-		log.Fatalf("%s\n", service.GetErrMsg(service.ERR_GET_GOODS_FAILED))
+		log.Printf("%s\n", service.GetErrMsg(service.ERR_GET_GOODS_FAILED))
 	}
 	if goods == nil || len(goods) == 0 {
-		log.Fatalf("%s\n", service.GetErrMsg(service.ERR_GET_GOODS_EMPTY_FAILED))
+		log.Printf("%s\n", service.GetErrMsg(service.ERR_GET_GOODS_EMPTY_FAILED))
 	}
 	good := goods[0]
 	fmt.Printf("good : %+v\n", good)

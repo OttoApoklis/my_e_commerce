@@ -53,7 +53,7 @@ func initDatabase() (*gorm.DB, error) {
 		var config Config
 		file, err := os.Open("config.yaml")
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 		defer func() {
 			err := recover()
@@ -67,20 +67,20 @@ func initDatabase() (*gorm.DB, error) {
 		decoder := yaml.NewDecoder(file)
 		err = decoder.Decode(&config)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 		dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=%s&parseTime=True",
 			config.Database.User, config.Database.Password, config.Database.Host,
 			config.Database.Port, config.Database.Dbname, config.Database.Charset)
 		instance, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 
 		// 配置连接池
 		sqlDB, err := instance.DB()
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 		}
 		sqlDB.SetMaxOpenConns(1)            // 设置最大打开连接数
 		sqlDB.SetMaxIdleConns(1)            // 设置最大空闲连接数

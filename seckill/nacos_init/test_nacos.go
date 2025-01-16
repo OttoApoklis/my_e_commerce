@@ -40,7 +40,7 @@ func NacosInit() {
 		},
 	)
 	if err != nil {
-		log.Fatalf("Error creating Nacos client: %v", err)
+		log.Printf("Error creating Nacos client: %v", err)
 	}
 
 	// 服务注册
@@ -59,7 +59,7 @@ func NacosInit() {
 
 	_, err = client.RegisterInstance(instance)
 	if err != nil {
-		log.Fatalf("Error registering instance: %v", err)
+		log.Printf("Error registering instance: %v", err)
 	}
 	log.Println("Service registered successfully.")
 
@@ -77,7 +77,7 @@ func NacosInit() {
 		Clusters:    clusters,
 	})
 	if err != nil {
-		log.Fatalf("Error selecting instances: %v", err)
+		log.Printf("Error selecting instances: %v", err)
 	}
 
 	for _, instance := range instances {
@@ -94,7 +94,7 @@ func NacosInit() {
 	//	GroupName:   "group-a",
 	//})
 	//if err != nil {
-	//	log.Fatalf("Error deregistering instance: %v", err)
+	//	log.Printf("Error deregistering instance: %v", err)
 	//}
 	//log.Println("Service deregistered successfully.")
 }
