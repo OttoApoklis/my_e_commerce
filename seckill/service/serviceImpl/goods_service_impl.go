@@ -32,11 +32,11 @@ func (s *GoodsServiceImpl) CreateGoods(db *gorm.DB, goods *model.Good) error {
 	return nil
 }
 
-func (s *GoodsServiceImpl) GetGoods(goodsId uint32) ([]model.Good, error) {
+func (s *GoodsServiceImpl) GetGoods(goodsNum uint32) ([]model.Good, error) {
 	db := config.GetDB()
 	goods := []model.Good{}
 	err := db.Select("id", "goods_num", "goods_name", "price",
-		"pic_url", "seller").Where("id = ?", goodsId).Find(&goods).Error
+		"pic_url", "seller").Where("goods_num = ?", goodsNum).Find(&goods).Error
 	if err != nil {
 		log.Printf(" err: %+v", err)
 		return nil, err
@@ -51,12 +51,12 @@ func (s *GoodsServiceImpl) UpdateGoods(db *gorm.DB, req *model2.GoodsReq) error 
 	var goods model2.GoodsReq
 	goods = *req
 	dbMessage := db.Model(&model.Good{}).
-		Where("goods_id = ?", *goods.GoodsNum).
+		Where("goods_num = ?", *goods.GoodsNum).
 		Limit(1).
 		Update("price", goods.Price)
-	if dbMessage.RowsAffected == 0 {
-		return errors.New("查不到该数据")
-	}
+	//if dbMessage.RowsAffected == 0 {
+	//	return errors.New("查不到该数据")
+	//}
 	err := dbMessage.Error
 	if err != nil {
 		log.Printf("error from Goods update: %+v", err)

@@ -109,8 +109,8 @@ var errMsgDic = map[int]string{
 	ERR_GET_GOODS_EMPTY_FAILED: "商品获取为空",
 	SUCCESS_CREATE_GOODS:       "商品创建成功",
 	SUCCESS_GET_GOODS:          "商品查询成功",
-	ERR_UPDATE_GOODS_FAILED:    "商品更新成功",
-	ERR_DELETE_GOODS_FAILED:    "商品删除成功",
+	SUCCESS_UPDATE_GOODS:       "商品更新成功",
+	SUCCESS_DELETE_BY_ID_GOODS: "商品删除成功",
 
 	ERR_CREATE_ORDER_FAILED:    "订单创建失败",
 	ERR_GET_ORDER_FAILED:       "订单获取失败",

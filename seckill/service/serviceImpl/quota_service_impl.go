@@ -19,7 +19,7 @@ func NewQuotaServiceImpl() *QuotaServiceImpl {
 func (s *QuotaServiceImpl) CreateQuota(db *gorm.DB, quotum *model.Quotum) error {
 	var quotas []model.Quotum
 
-	if err := db.Select("goods_id").Find(&quotas).Error; err != nil {
+	if err := db.Where("goods_id = ?", quotum.GoodsID).Find(&quotas).Error; err != nil {
 		log.Printf("err from quota find in createQuota: %+v", err)
 		return err
 	}

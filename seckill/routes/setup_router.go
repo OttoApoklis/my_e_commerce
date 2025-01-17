@@ -65,5 +65,15 @@ func SetupRouter() *gin.Engine {
 		orderGroup.POST("/update", orderHandler.UpdateOrder)
 		orderGroup.POST("/deleteById", orderHandler.DeleteOrderById)
 	}
+
+	SeckillStockGroup := router.Group("/seckillStock")
+	seckillStockService := serviceImpl.NewSeckillStockServiceImpl()
+	SeckillStockHandler := controller.NewSeckillStockHandler(seckillStockService)
+	{
+		SeckillStockGroup.POST("/create", SeckillStockHandler.CreateSeckillStock)
+		SeckillStockGroup.POST("/get", SeckillStockHandler.GetSeckillStock)
+		SeckillStockGroup.POST("/update", SeckillStockHandler.UpdateSeckillStock)
+		SeckillStockGroup.POST("/deleteById", SeckillStockHandler.DeleteSeckillStockById)
+	}
 	return router
 }
