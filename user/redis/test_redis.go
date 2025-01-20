@@ -31,7 +31,7 @@ func TestRedis2() {
 		value := fmt.Sprintf("value:%d", rand.Intn(1000000))
 		err := rdb.Set(ctx, key, value, 0).Err()
 		if err != nil {
-			log.Fatalf("写入Redis失败: %v", err)
+			log.Printf("写入Redis失败: %v", err)
 		}
 	}
 	elapsed := time.Since(start)

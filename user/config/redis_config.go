@@ -47,18 +47,18 @@ func init() {
 	// 设置 Viper 解析 YAML 配置文件
 	viper.SetConfigFile("config.yaml")
 	if err := viper.ReadInConfig(); err != nil {
-		log.Fatalf("Error reading config file, %s", err)
+		log.Printf("Error reading config file, %s", err)
 	}
 }
 
 func GetRedisConnection() (*redis.Client, error) {
 	var config RConfig
 	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalf("Unable to decode into struct, %v", err)
+		log.Printf("Unable to decode into struct, %v", err)
 	}
 	rdb, err := GetRedisClient(config.Redis)
 	if err != nil {
-		log.Fatalf("Failed to initialize Redis client: %v", err)
+		log.Printf("Failed to initialize Redis client: %v", err)
 	}
 	return rdb, err
 }
@@ -66,23 +66,23 @@ func GetRedisConnection() (*redis.Client, error) {
 func example() {
 	var config RConfig
 	if err := viper.Unmarshal(&config); err != nil {
-		log.Fatalf("Unable to decode into struct, %v", err)
+		log.Printf("Unable to decode into struct, %v", err)
 	}
 	rdb, err := GetRedisClient(config.Redis)
 	if err != nil {
-		log.Fatalf("Failed to initialize Redis client: %v", err)
+		log.Printf("Failed to initialize Redis client: %v", err)
 	}
 	ctx := context.Background()
 	// 使用 rdb 进行操作
 	// 示例：设置一个键值对
 	err = rdb.Set(ctx, "key", "value", 0).Err()
 	if err != nil {
-		log.Fatalf("Failed to set key: %v", err)
+		log.Printf("Failed to set key: %v", err)
 	}
 
 	val, err := rdb.Get(ctx, "key").Result()
 	if err != nil {
-		log.Fatalf("Failed to get key: %v", err)
+		log.Printf("Failed to get key: %v", err)
 	}
 	fmt.Println("Key value:", val)
 }

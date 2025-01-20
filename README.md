@@ -155,7 +155,7 @@
 
 
 ## 工作进度
-    目前实现进度到用户模块, 目前使用gorm操作数据库还不熟悉
+    用户模块和秒杀模块各自完成，trpc没有合适文档，暂时不整合服务间调度了
 
 
 # kratos 容易上手的开源go微服务框架
@@ -166,9 +166,4 @@
 ## go get github.com/google/wire/cmd/wire@latest
 
 # TODO
-# today
-# 修复bug
-# 
-# 整合mq
-# 整合redis
 # 整合nacos或etdc
