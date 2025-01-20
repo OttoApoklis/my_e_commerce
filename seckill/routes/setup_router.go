@@ -53,6 +53,7 @@ func SetupRouter() *gin.Engine {
 	{
 		goodsGroup.POST("/create", goodsHandler.CreateGoods)
 		goodsGroup.POST("/get", goodsHandler.GetGoods)
+		goodsGroup.POST("/getPage", goodsHandler.GetGoodsInPage)
 		goodsGroup.POST("/update", goodsHandler.UpdateGoods)
 		goodsGroup.POST("/deleteById", goodsHandler.DeleteGoodsById)
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(order model2.OrderReq) (uint32, error)
+	CreateOrder(db *gorm.DB, order model2.OrderReq) (uint32, error)
 	UpdateOrder(order model2.OrderReq) error
 	GetOrder(order model2.OrderReq) ([]*model.Order, error)
 	DeleteOrderById(db *gorm.DB, ID uint32) error

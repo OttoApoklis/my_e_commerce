@@ -48,7 +48,7 @@ func (s *OrderServiceImpl) GetOrder(order model.OrderReq) ([]*model2.Order, erro
 
 func NewOrderServiceImpl() *OrderServiceImpl { return &OrderServiceImpl{} }
 
-func (s *OrderServiceImpl) CreateOrder(order model.OrderReq) (uint32, error) {
+func (s *OrderServiceImpl) CreateOrder(db *gorm.DB, order model.OrderReq) (uint32, error) {
 	defer func() {
 		err := recover()
 		if err != nil {
@@ -56,7 +56,6 @@ func (s *OrderServiceImpl) CreateOrder(order model.OrderReq) (uint32, error) {
 			return
 		}
 	}()
-	db := config.GetDB()
 	var orderInsert model2.Order
 	fmt.Printf("order %+v", order)
 	utils.CopyStruct(&order, &orderInsert)

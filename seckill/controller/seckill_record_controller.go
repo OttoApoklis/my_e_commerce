@@ -141,11 +141,21 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		fmt.Println("Error:", err)
 		return
 	}
+	db := config.GetDB()
+	db.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			db.Rollback()
+			log.Printf("err from db: %+v", err)
+			return
+		}
+	}()
 	fmt.Printf("redis subStock result: %+v", result)
 	// 数据库扣库存
-	ok, err := h.stockService.SubStock(seckillReq.GoodsID, seckillReq.GoodsAmount)
+	ok, err := h.stockService.SubStock(db, seckillReq.GoodsID, seckillReq.GoodsAmount)
 	if err != nil {
 		log.Printf("this is err , %+v\n", err)
+		db.Rollback()
 		return
 	}
 	if !ok {
@@ -175,11 +185,13 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	orderReq.Buyer = uint32(userID)
 	orderReq.Seller = good.Seller
 	fmt.Printf("orderReq : %+v\n", orderReq)
-	_, err = h.orderService.CreateOrder(orderReq)
+	_, err = h.orderService.CreateOrder(db, orderReq)
 	if err != nil {
 		log.Fatalln("%s\n", service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED))
+		db.Rollback()
 		return
 	}
+	db.Commit()
 	log.Printf("create a seckillOrder SUCCESS!")
 }
 

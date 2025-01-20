@@ -8,6 +8,7 @@ import (
 	"my_e_commerce/data/dal/model"
 	"my_e_commerce/data/filter"
 	model2 "my_e_commerce/data/req"
+	"my_e_commerce/data/req/page"
 	"my_e_commerce/data/response"
 	"my_e_commerce/service"
 )
@@ -83,6 +84,36 @@ func (h *GoodsHandler) GetGoods(c *gin.Context) {
 			response.SUCCESS_GET_GOODS,
 			response.GetErrMsg(response.SUCCESS_GET_GOODS),
 			goodss))
+	return
+}
+
+func (h *GoodsHandler) GetGoodsInPage(c *gin.Context) {
+	var req model2.GoodsReq
+	if err := c.BindJSON(&req); err != nil {
+		log.Printf("error frorm goods get BindJSON: %+v", err)
+		c.JSON(200,
+			response.GetResponse(
+				response.ERR_JSON_BIND,
+				response.GetErrMsg(response.ERR_JSON_BIND),
+				err.Error()))
+		return
+	}
+	var goodsPage page.GoodsRespPage
+	goodsPage, err := h.goodsService.GetGoodsInPage(req.GoodsNum, req.PageSize, req.PageNum)
+	if err != nil {
+		log.Printf("err from get Goods: %+v", err)
+		c.JSON(200,
+			response.GetResponse(
+				response.ERR_GET_GOODS_FAILED,
+				response.GetErrMsg(response.ERR_GET_GOODS_FAILED),
+				err.Error()))
+		return
+	}
+	c.JSON(200,
+		response.GetResponse(
+			response.SUCCESS_GET_GOODS,
+			response.GetErrMsg(response.SUCCESS_GET_GOODS),
+			goodsPage))
 	return
 }
 

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -20,7 +21,13 @@ func NewQuotaHandler(quotaService service.QuotaService) *QuotaHandler {
 	return &QuotaHandler{quotaService: quotaService}
 }
 
+func getId(ctx context.Context) {
+	// 隐式转换
+
+}
+
 func (h *QuotaHandler) CreateQuota(c *gin.Context) {
+	getId(c)
 	defer func() {
 		err := recover()
 		if err != nil {

@@ -1,7 +1,6 @@
 package serviceImpl
 
 import (
-	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 
 	"gorm.io/gorm"
@@ -18,8 +17,7 @@ func NewStockServiceImpl() *StockServiceImpl {
 	return &StockServiceImpl{}
 }
 
-func (s *StockServiceImpl) SubStock(goodsId uint32, num uint32) (bool, error) {
-	db := config.GetDB()
+func (s *StockServiceImpl) SubStock(db *gorm.DB, goodsId uint32, num uint32) (bool, error) {
 	tx := db.Model(&model.SeckillStock{}).
 		Where("goods_id = ? and stock >= ?", goodsId, num).
 		Update("stock", gorm.Expr("stock - ?", num))

@@ -41,7 +41,8 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	fmt.Printf("controller order: %+v", newOrder)
 	var orderReq model2.OrderReq
 	utils.CopyStruct(&newOrder, &orderReq)
-	if _, err := h.orderService.CreateOrder(orderReq); err != nil {
+	db := config.GetDB()
+	if _, err := h.orderService.CreateOrder(db, orderReq); err != nil {
 		log.Printf("err from create Order: %+v", err)
 		c.JSON(200,
 			response.GetResponse(

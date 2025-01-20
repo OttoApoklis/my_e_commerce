@@ -7,6 +7,7 @@ import (
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 	model2 "my_e_commerce/data/req"
+	"my_e_commerce/data/req/page"
 )
 
 type GoodsServiceImpl struct {
@@ -45,6 +46,38 @@ func (s *GoodsServiceImpl) GetGoods(goodsNum uint32) ([]model.Good, error) {
 		log.Printf("Get Goods is nil")
 	}
 	return goods, nil
+}
+
+func (s *GoodsServiceImpl) GetGoodsInPage(goodsNum *string, size uint32, offset uint32) (page.GoodsRespPage, error) {
+	db := config.GetDB()
+	if size < 1 {
+		size = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	goods := []model.Good{}
+	var goodsRespPage page.GoodsRespPage
+	temp := *goodsNum
+	temp += "%"
+	goodsNum = &temp
+	var total uint32
+	err := db.Raw("select 1 from goods where goods_num like ?", goodsNum).Find(&total).Error
+	if err != nil {
+		log.Printf("err from GetGoodsInPage select total, err: %+v", err)
+	}
+	goodsRespPage.TotalPages = total / size
+	goodsRespPage.PageSize = size
+	goodsRespPage.PageNumber = offset + 1
+	if total <= size*(offset-1) {
+		log.Printf("no data in this page from GetGoodsInPage")
+		return goodsRespPage, nil
+	}
+
+	err = db.Select("id", "goods_num", "goods_name", "price",
+		"pic_url", "seller").Where("goods_num like ?", goodsNum).Find(&goods).Limit(int(size)).Offset(int(offset)).Error
+	goodsRespPage.Data = goods
+	return goodsRespPage, nil
 }
 
 func (s *GoodsServiceImpl) UpdateGoods(db *gorm.DB, req *model2.GoodsReq) error {

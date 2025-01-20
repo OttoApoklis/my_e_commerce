@@ -9,4 +9,6 @@ type GoodsReq struct {
 	Price     decimal.Decimal `gorm:"column:price;type:float;not null;comment:商品单价" json:"price"`               // 商品单价
 	PicURL    *string         `gorm:"column:pic_url;type:varchar(128);comment:商品图片" json:"pic_url"`             // 商品图片
 	Seller    uint32          `gorm:"column:seller;type:bigint;not null;comment:卖家ID" json:"seller"`            // 卖家ID
+	PageSize  uint32          `json:"page_size"`
+	PageNum   uint32          `json:"page_num"`
 }
