@@ -4,9 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/viper"
+)
+
+var (
+	redisOnce sync.Once
 )
 
 type RedisConfig struct {
@@ -44,27 +49,19 @@ func GetRedisClient(config RedisConfig) (*redis.Client, error) {
 	return rdb, nil
 }
 
-func init() {
-	// 设置 Viper 解析 YAML 配置文件
-	viper.SetConfigFile("config.yaml")
-	if err := viper.ReadInConfig(); err != nil {
-		log.Printf("Error reading config file, %s", err)
-	}
-}
-
 func GetRedisConnection() (*redis.Client, error) {
 	var config RConfig
 	var rdb *redis.Client
 	var err error
-	once.Do(func() {
-		if err = viper.Unmarshal(&config); err != nil {
-			log.Printf("Unable to decode into struct, %v", err)
-		}
-		rdb, err = GetRedisClient(config.Redis)
-		if err != nil {
-			log.Printf("Failed to initialize Redis client: %v", err)
-		}
-	})
+	//redisOnce.Do(func() {
+	if err = viper.Unmarshal(&config); err != nil {
+		log.Printf("Unable to decode into struct, %v", err)
+	}
+	rdb, err = GetRedisClient(config.Redis)
+	if err != nil {
+		log.Printf("Failed to initialize Redis client: %v", err)
+	}
+	//})
 	return rdb, err
 }
 

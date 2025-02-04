@@ -3,6 +3,11 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
+	"github.com/streadway/amqp"
+	"golang.org/x/net/context"
+	"golang.org/x/time/rate"
 	"io/ioutil"
 	"log"
 	"my_e_commerce/config"
@@ -11,12 +16,7 @@ import (
 	service2 "my_e_commerce/service"
 	"my_e_commerce/utils"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
-	"github.com/shopspring/decimal"
-	"github.com/streadway/amqp"
-	"golang.org/x/net/context"
-	"golang.org/x/time/rate"
+	"strings"
 )
 
 type SeckillHandler struct {
@@ -60,7 +60,8 @@ func (h *SeckillHandler) CreateSeckill(c *gin.Context) {
 	if seckillReq.GoodsAmount <= 0 {
 		c.JSON(service.ERR_INPUT_INVALID, service.GetResponse(service.ERR_INPUT_INVALID, service.GetErrMsg(service.ERR_INPUT_INVALID), nil))
 	}
-	conn, _ := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	dsn := config.GetRabbitmqDSN()
+	conn, _ := amqp.Dial(dsn)
 
 	utils.SendMessageOnce(conn, "seckill", seckillReq)
 	// TODO 创建秒杀单
@@ -71,7 +72,9 @@ func (h *SeckillHandler) CreateSeckill(c *gin.Context) {
 
 // 接收函数（带限流）
 func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string, limit rate.Limit) {
-	conn, _ = amqp.Dial("amqp://guest:guest@localhost:5672/")
+	dsn := config.GetRabbitmqDSN()
+	conn, _ = amqp.Dial(dsn)
+	log.Printf("receiver channel: %s", dsn)
 	ch, err := conn.Channel()
 	if err != nil {
 		log.Printf("mq err1 : %+v", err)
@@ -103,25 +106,38 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 		log.Printf("mq err3 : %+v", err)
 	}
 
-	limiter := rate.NewLimiter(limit, 1)
+	//limiter := rate.NewLimiter(limit, 10)
 	log.Printf("begin listen mq")
 	for d := range msgs {
-		if limiter.Allow() {
-			var data model2.SeckillReq
-			err = json.Unmarshal(d.Body, &data)
-			if err != nil {
-				log.Printf("Failed to unmarshal data : %+v", err)
+		//if limiter.Allow() {
+		var data model2.SeckillReq
+		err = json.Unmarshal(d.Body, &data)
+		if err != nil {
+			if r := recover(); r != nil {
+				log.Printf("Panic occurred while processing message: %v", r)
 			}
-			log.Printf("Received: %+v", data)
-			h.CreateSeckillByRabbitmq(data)
-		} else {
-			log.Println("Rate limit exceeded, skipping message")
+			log.Printf("Failed to unmarshal data : %+v", err)
 		}
+		log.Printf("Received: %+v", data)
+		defer func() {
+			d.Ack(false)
+		}()
+		h.CreateSeckillByRabbitmq(data)
+
+		//} else {
+		//	log.Println("Rate limit exceeded, skipping message")
+		//}
 	}
 }
+
 func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	// TODO 先去查redis库存数据
 	// 读取.lua 文件的内容
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("ERROR recover: %s", err)
+		}
+	}()
 	userID := 1
 	scriptBytes, err := ioutil.ReadFile("./lua/redis_substock.lua")
 	if err != nil {
@@ -135,32 +151,72 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		return
 	}
 	ctx := context.Background()
-
 	result, err := rdb.Eval(ctx, script, []string{strconv.Itoa(int(seckillReq.GoodsID))}, seckillReq.GoodsAmount).Result()
+	res, ok := result.(int64)
+	if !ok {
+		log.Printf("秒杀接口断言转换失败！")
+		return
+	}
+	if res == 0 {
+		log.Printf("扣库存失败， message:%+v", seckillReq)
+		return
+	}
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println("Error lua:", err)
 		return
 	}
 	db := config.GetDB()
-	db.Begin()
+	tx := db.Begin()
+	if tx.Error != nil {
+		log.Printf("Failed to begin transaction: %+v", tx.Error)
+		return
+	}
 	defer func() {
-		if err := recover(); err != nil {
-			db.Rollback()
-			log.Printf("err from db: %+v", err)
-			return
+		if r := recover(); r != nil {
+			// 回滚数据库
+			tx.Rollback()
+			log.Printf("2恢复redis")
+			// 恢复redis库存
+			redisAdd(seckillReq)
+			log.Printf("err from db: %+v", r)
+		} else {
+			log.Printf("事务提交")
+			if err := tx.Commit().Error; err != nil {
+				if !strings.Contains(err.Error(), "transaction has already been committed or rolled back") {
+					// 回滚数据库
+					tx.Rollback()
+					log.Printf("1恢复redis")
+					// 恢复redis库存
+					redisAdd(seckillReq)
+				}
+				log.Printf("Failed to commit transaction: %+v", err)
+				return
+			}
 		}
 	}()
-	fmt.Printf("redis subStock result: %+v", result)
+
 	// 数据库扣库存
-	ok, err := h.stockService.SubStock(db, seckillReq.GoodsID, seckillReq.GoodsAmount)
+	ok, err = h.stockService.SubStock(tx, seckillReq.GoodsID, seckillReq.GoodsAmount)
 	if err != nil {
 		log.Printf("this is err , %+v\n", err)
-		db.Rollback()
+		// 回滚数据库
+		tx.Rollback()
+		log.Printf("3恢复redis")
+		// 恢复redis库存
+		redisAdd(seckillReq)
 		return
 	}
 	if !ok {
 		log.Printf("%s\n", service.GetErrMsg(service.ERR_DESC_STOCK_FAILED))
+		// 回滚数据库
+		tx.Rollback()
+		log.Printf("4恢复redis")
+		// 恢复redis库存
+		redisAdd(seckillReq)
+		return
 	}
+	log.Printf("mysql subStock")
+
 	// 创建订单
 	var orderReq model2.OrderReq
 	utils.CopyStruct(seckillReq, orderReq)
@@ -185,14 +241,35 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	orderReq.Buyer = uint32(userID)
 	orderReq.Seller = good.Seller
 	fmt.Printf("orderReq : %+v\n", orderReq)
-	_, err = h.orderService.CreateOrder(db, orderReq)
+	_, err = h.orderService.CreateOrder(tx, orderReq)
+
 	if err != nil {
 		log.Fatalln("%s\n", service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED))
-		db.Rollback()
+		// 回滚数据库
+		tx.Rollback()
+		log.Printf("5恢复redis")
+		// 恢复redis库存
+		redisAdd(seckillReq)
 		return
 	}
-	db.Commit()
+
 	log.Printf("create a seckillOrder SUCCESS!")
+}
+
+func redisAdd(seckillReq model2.SeckillReq) {
+	scriptBytes, err := ioutil.ReadFile("./lua/redis_substock_add.lua")
+	if err != nil {
+		fmt.Println("Error reading Lua script file:", err)
+		return
+	}
+	script := string(scriptBytes)
+	rdb, err := config.GetRedisConnection()
+	if err != nil {
+		fmt.Println("Error GetRedisConnection:", err)
+		return
+	}
+	ctx := context.Background()
+	rdb.Eval(ctx, script, []string{strconv.Itoa(int(seckillReq.GoodsID))}, seckillReq.GoodsAmount).Result()
 }
 
 func MultiplyFloatsAsDecimals(price float32, amount uint32) float64 {

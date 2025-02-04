@@ -9,6 +9,7 @@ import (
 	model2 "my_e_commerce/data/dal/model"
 	model "my_e_commerce/data/req"
 	"my_e_commerce/utils"
+	"strconv"
 )
 
 type SeckillStockServiceImpl struct{}
@@ -57,14 +58,15 @@ func (s *SeckillStockServiceImpl) CreateSeckillStock(SeckillStock model.SeckillS
 		}
 	}()
 	db := config.GetDB()
-	var SeckillStockInsert model2.SeckillStock
+	var seckillStockInsert model2.SeckillStock
 	fmt.Printf("SeckillStock %+v", SeckillStock)
-	utils.CopyStruct(&SeckillStock, &SeckillStockInsert)
-	fmt.Printf("SeckillStockInsert %+v", SeckillStockInsert)
-	fmt.Println(SeckillStockInsert)
-	tx := db.Save(&SeckillStockInsert)
+	utils.CopyStruct(&SeckillStock, &seckillStockInsert)
+	fmt.Printf("seckillStockInsert %+v", seckillStockInsert)
+	fmt.Println(seckillStockInsert)
+	tx := db.Save(&seckillStockInsert)
+	utils.RedisSetStock(strconv.FormatUint(uint64(*seckillStockInsert.GoodsID), 10), int(seckillStockInsert.Stock))
 	fmt.Printf("affect :%+v", tx.RowsAffected)
-	return SeckillStockInsert.ID, tx.Error
+	return seckillStockInsert.ID, tx.Error
 }
 
 func (s *SeckillStockServiceImpl) DeleteSeckillStockById(db *gorm.DB, ID uint32) error {

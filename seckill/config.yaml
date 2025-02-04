@@ -12,3 +12,9 @@ redis:
   user: "root"
   passwd: ""
   dbname: 0
+rabbitmq:
+  host: "192.168.128.128"
+  port: 5672
+  user: "guest"
+  passwd: "guest"
+  vhost: ""

@@ -57,9 +57,9 @@ func (s *OrderServiceImpl) CreateOrder(db *gorm.DB, order model.OrderReq) (uint3
 		}
 	}()
 	var orderInsert model2.Order
-	fmt.Printf("order %+v", order)
+	fmt.Printf("order %+v\n", order)
 	utils.CopyStruct(&order, &orderInsert)
-	fmt.Printf("orderInsert %+v", orderInsert)
+	fmt.Printf("orderInsert %+v\n", orderInsert)
 	fmt.Println(orderInsert)
 	tx := db.Save(&orderInsert)
 	fmt.Printf("affect :%+v", tx.RowsAffected)
