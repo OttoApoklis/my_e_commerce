@@ -1,6 +1,8 @@
 module my_e_commerce
 
-go 1.20
+go 1.21
+
+toolchain go1.23.4
 
 require (
 	github.com/Andrew-M-C/trpc-go-demo v0.0.0-20241122060630-eb06b8f3e6c7

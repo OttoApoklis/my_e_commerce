@@ -7,11 +7,14 @@ import (
 )
 
 func GetRabbitmqConnection() *amqp.Connection {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
-	if err != nil {
-		log.Printf("Failed to connect to RabbitMQ: %s", err)
-	}
-	log.Printf("mq connection is open")
-	defer conn.Close()
+	var conn *amqp.Connection
+	once.Do(func() {
+		conn, err := amqp.Dial("amqp://guest:guest@192.168.128.128:5672/")
+		if err != nil {
+			log.Printf("Failed to connect to RabbitMQ: %s", err)
+		}
+		log.Printf("mq connection is open")
+		defer conn.Close()
+	})
 	return conn
 }

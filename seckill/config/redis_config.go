@@ -54,13 +54,17 @@ func init() {
 
 func GetRedisConnection() (*redis.Client, error) {
 	var config RConfig
-	if err := viper.Unmarshal(&config); err != nil {
-		log.Printf("Unable to decode into struct, %v", err)
-	}
-	rdb, err := GetRedisClient(config.Redis)
-	if err != nil {
-		log.Printf("Failed to initialize Redis client: %v", err)
-	}
+	var rdb *redis.Client
+	var err error
+	once.Do(func() {
+		if err = viper.Unmarshal(&config); err != nil {
+			log.Printf("Unable to decode into struct, %v", err)
+		}
+		rdb, err = GetRedisClient(config.Redis)
+		if err != nil {
+			log.Printf("Failed to initialize Redis client: %v", err)
+		}
+	})
 	return rdb, err
 }
 

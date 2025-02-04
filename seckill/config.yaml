@@ -1,13 +1,13 @@
 database:
-  host: "localhost"
-  port: 3306
+  host: "192.168.128.128"
+  port: 3307
   config: ""
   user: "root"
   password: ""
   dbname: "seckill"
   charset: "utf8mb4"
 redis:
-  host: "localhost"
+  host: "192.168.128.128"
   port: 6379
   user: "root"
   passwd: ""
