@@ -106,27 +106,26 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 		log.Printf("mq err3 : %+v", err)
 	}
 
-	//limiter := rate.NewLimiter(limit, 10)
+	limiter := rate.NewLimiter(limit, 1)
 	log.Printf("begin listen mq")
 	for d := range msgs {
-		//if limiter.Allow() {
-		var data model2.SeckillReq
-		err = json.Unmarshal(d.Body, &data)
-		if err != nil {
-			if r := recover(); r != nil {
-				log.Printf("Panic occurred while processing message: %v", r)
+		if limiter.Allow() {
+			var data model2.SeckillReq
+			err = json.Unmarshal(d.Body, &data)
+			if err != nil {
+				if r := recover(); r != nil {
+					log.Printf("Panic occurred while processing message: %v", r)
+				}
+				log.Printf("Failed to unmarshal data : %+v", err)
 			}
-			log.Printf("Failed to unmarshal data : %+v", err)
+			log.Printf("Received: %+v", data)
+			defer func() {
+				d.Ack(false)
+			}()
+			h.CreateSeckillByRabbitmq(data)
+		} else {
+			log.Println("Rate limit exceeded, skipping message")
 		}
-		log.Printf("Received: %+v", data)
-		defer func() {
-			d.Ack(false)
-		}()
-		h.CreateSeckillByRabbitmq(data)
-
-		//} else {
-		//	log.Println("Rate limit exceeded, skipping message")
-		//}
 	}
 }
 
@@ -151,6 +150,7 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		return
 	}
 	ctx := context.Background()
+	log.Println(seckillReq.GoodsID)
 	result, err := rdb.Eval(ctx, script, []string{strconv.Itoa(int(seckillReq.GoodsID))}, seckillReq.GoodsAmount).Result()
 	res, ok := result.(int64)
 	if !ok {

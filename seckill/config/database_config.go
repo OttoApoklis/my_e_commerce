@@ -82,8 +82,8 @@ func initDatabase() (*gorm.DB, error) {
 	if err != nil {
 		log.Print(err)
 	}
-	sqlDB.SetMaxOpenConns(1)            // 设置最大打开连接数
-	sqlDB.SetMaxIdleConns(1)            // 设置最大空闲连接数
+	sqlDB.SetMaxOpenConns(100)          // 设置最大打开连接数
+	sqlDB.SetMaxIdleConns(10)           // 设置最大空闲连接数
 	sqlDB.SetConnMaxLifetime(time.Hour) // 设置连接可复用的最大时间
 	//})
 	return instance, nil
