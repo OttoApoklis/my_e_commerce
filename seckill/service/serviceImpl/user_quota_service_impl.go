@@ -7,7 +7,7 @@ import (
 	"log"
 	"my_e_commerce/data/dal/model"
 	"my_e_commerce/data/filter"
-	model2 "my_e_commerce/data/resp"
+	model2 "my_e_commerce/data/req"
 )
 
 type UserQuotaServiceImpl struct{}

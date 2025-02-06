@@ -7,7 +7,7 @@ import (
 	"log"
 	"my_e_commerce/config"
 	model2 "my_e_commerce/data/dal/model"
-	model "my_e_commerce/data/resp"
+	model "my_e_commerce/data/req"
 	"my_e_commerce/utils"
 	"strconv"
 )

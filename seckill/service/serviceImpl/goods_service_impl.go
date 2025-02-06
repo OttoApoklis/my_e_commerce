@@ -6,8 +6,8 @@ import (
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
-	model2 "my_e_commerce/data/resp"
-	"my_e_commerce/data/resp/page"
+	model2 "my_e_commerce/data/req"
+	"my_e_commerce/data/req/page"
 )
 
 type GoodsServiceImpl struct {

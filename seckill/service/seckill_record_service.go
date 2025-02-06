@@ -1,6 +1,6 @@
 package service
 
-import model "my_e_commerce/data/resp"
+import model "my_e_commerce/data/req"
 
 type SeckillRecordService interface {
 	CreateSecRecord(service *SeckillRecordService) error
