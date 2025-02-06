@@ -29,3 +29,4 @@ type Good struct {
 func (*Good) TableName() string {
 	return TableNameGood
 }
+

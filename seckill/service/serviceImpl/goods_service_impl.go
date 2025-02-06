@@ -83,8 +83,8 @@ func (s *GoodsServiceImpl) GetGoodsInPage(goodsNum *string, size uint32, offset 
 	return goodsRespPage, nil
 }
 
-func (s *GoodsServiceImpl) UpdateGoods(db *gorm.DB, req *model2.GoodsReq) error {
-	var goods model2.GoodsReq
+func (s *GoodsServiceImpl) UpdateGoods(db *gorm.DB, req *model2.GoodsUpdateReq) error {
+	var goods model2.GoodsUpdateReq
 	goods = *req
 	dbMessage := db.Model(&model.Good{}).
 		Where("goods_num = ?", *goods.GoodsNum).

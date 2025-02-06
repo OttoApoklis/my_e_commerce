@@ -10,15 +10,18 @@ import (
 	model2 "my_e_commerce/data/req"
 	"my_e_commerce/data/req/page"
 	"my_e_commerce/data/response"
+	"my_e_commerce/enum"
 	"my_e_commerce/service"
+	"my_e_commerce/utils"
 )
 
 type GoodsHandler struct {
-	goodsService service.GoodsService
+	goodsService        service.GoodsService
+	seckillStockService service.SeckillStockService
 }
 
-func NewGoodsHandler(goodsService service.GoodsService) *GoodsHandler {
-	return &GoodsHandler{goodsService: goodsService}
+func NewGoodsHandler(goodsService service.GoodsService, seckillStockService service.SeckillStockService) *GoodsHandler {
+	return &GoodsHandler{goodsService: goodsService, seckillStockService: seckillStockService}
 }
 
 func (h *GoodsHandler) CreateGoods(c *gin.Context) {
@@ -28,8 +31,8 @@ func (h *GoodsHandler) CreateGoods(c *gin.Context) {
 			log.Printf("createGoods err: %+v", err)
 		}
 	}()
-	var newGoods model.Good
-	if err := c.BindJSON(&newGoods); err != nil {
+	var newGoods model2.GoodsCreateReq
+	if err := c.ShouldBind(&newGoods); err != nil {
 		log.Printf("error from goods create BindJSON: %+v", err)
 		c.JSON(200,
 			response.GetResponse(
@@ -39,8 +42,28 @@ func (h *GoodsHandler) CreateGoods(c *gin.Context) {
 		return
 	}
 	db := config.GetDB()
-	if err := h.goodsService.CreateGoods(db, &newGoods); err != nil {
+	var insertGoods model.Good
+	utils.CopyStruct(newGoods, insertGoods)
+	snowCode := utils.GetSnowCode()
+	numPrefix, err := enum.GetNumPrefix(*newGoods.GoodsType)
+	if err != nil {
+		log.Printf("getNumPrefix failed cause by: %v.", err)
+	}
+	GoodsNum := fmt.Sprintf("%s%d", numPrefix, snowCode)
+	insertGoods.GoodsNum = &GoodsNum
+	if err := h.goodsService.CreateGoods(db, &insertGoods); err != nil {
 		log.Printf("err from create Goods: %+v", err)
+		c.JSON(200,
+			response.GetResponse(
+				response.ERR_CREATE_GOODS_FAILED,
+				response.GetErrMsg(response.ERR_CREATE_GOODS_FAILED),
+				err.Error()))
+		return
+	}
+	id := insertGoods.ID
+	seckillStock := model2.SeckillStockReq{Stock: newGoods.Stock, GoodsID: &id}
+	if _, err := h.seckillStockService.CreateSeckillStock(seckillStock); err != nil {
+		log.Printf("Create Goods SUCCESS, but err from create SeckillStock: %+v", err)
 		c.JSON(200,
 			response.GetResponse(
 				response.ERR_CREATE_GOODS_FAILED,
@@ -52,7 +75,7 @@ func (h *GoodsHandler) CreateGoods(c *gin.Context) {
 		response.GetResponse(
 			response.SUCCESS_CREATE_GOODS,
 			response.GetErrMsg(response.SUCCESS_CREATE_GOODS),
-			newGoods))
+			insertGoods))
 	return
 }
 
@@ -88,8 +111,8 @@ func (h *GoodsHandler) GetGoods(c *gin.Context) {
 }
 
 func (h *GoodsHandler) GetGoodsInPage(c *gin.Context) {
-	var req model2.GoodsReq
-	if err := c.BindJSON(&req); err != nil {
+	var req model2.GoodsGetPageReq
+	if err := c.ShouldBind(&req); err != nil {
 		log.Printf("error frorm goods get BindJSON: %+v", err)
 		c.JSON(200,
 			response.GetResponse(
@@ -118,7 +141,7 @@ func (h *GoodsHandler) GetGoodsInPage(c *gin.Context) {
 }
 
 func (h *GoodsHandler) UpdateGoods(c *gin.Context) {
-	var goodReq model2.GoodsReq
+	var goodReq model2.GoodsUpdateReq
 	if err := c.BindJSON(&goodReq); err != nil {
 		log.Printf("error from goods update BindJSON: %+v", err)
 		c.JSON(200,

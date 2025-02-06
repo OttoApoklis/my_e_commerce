@@ -22,6 +22,7 @@ func SetupRouter() *gin.Engine {
 	orderService := serviceImpl.NewOrderServiceImpl()
 	stockService := serviceImpl.NewStockServiceImpl()
 	goodsService := serviceImpl.NewGoodsServiceImpl()
+	seckillStockService := serviceImpl.NewSeckillStockServiceImpl()
 	seckillHandler := controller.NewSeckillHanlder(seckillRecordService,
 		orderService, stockService, goodsService)
 	{
@@ -49,7 +50,7 @@ func SetupRouter() *gin.Engine {
 	}
 
 	goodsGroup := router.Group("/goods")
-	goodsHandler := controller.NewGoodsHandler(goodsService)
+	goodsHandler := controller.NewGoodsHandler(goodsService, seckillStockService)
 	{
 		goodsGroup.POST("/create", goodsHandler.CreateGoods)
 		goodsGroup.POST("/get", goodsHandler.GetGoods)
@@ -68,7 +69,7 @@ func SetupRouter() *gin.Engine {
 	}
 
 	SeckillStockGroup := router.Group("/seckillStock")
-	seckillStockService := serviceImpl.NewSeckillStockServiceImpl()
+
 	SeckillStockHandler := controller.NewSeckillStockHandler(seckillStockService)
 	{
 		SeckillStockGroup.POST("/create", SeckillStockHandler.CreateSeckillStock)

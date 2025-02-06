@@ -7,6 +7,7 @@ import (
 var (
 	SUCCESS                    = 0
 	ERR_DB                     = 10
+	ERR_DB_DBDuplicateERROR    = 1001
 	ERR_INPUT_INVALID          = 10020
 	ERR_SHOULD_BIND            = 10021
 	ERR_JSON_MARSHAL           = 10022
@@ -93,6 +94,7 @@ var errMsgDic = map[int]string{
 	ERR_JSON_BIND:              "JSONBind failed",
 	ERR_JSON_MARSHAL:           "json marshal failed",
 	ERR_DB:                     "db failed",
+	ERR_DB_DBDuplicateERROR:    "唯一键冲突",
 	ERR_FIND_GOODS_FAILED:      "商品查询失败",
 	ERR_GOODS_STOCK_NOT_ENOUGH: "商品库存不足",
 

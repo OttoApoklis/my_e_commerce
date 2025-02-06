@@ -68,8 +68,13 @@ func (sf *SnowflakeIDWorker) NextID() (int64, error) {
 	return id, nil
 }
 
+var worker *SnowflakeIDWorker
+var once sync.Once
+
 func GetSnowCode() int64 {
-	worker := NewSnowflakeIDWorker(1, 1)
+	once.Do(func() {
+		worker = NewSnowflakeIDWorker(1, 1)
+	})
 	id, err := worker.NextID()
 	if err != nil {
 		fmt.Println("Error generating ID:", err)
