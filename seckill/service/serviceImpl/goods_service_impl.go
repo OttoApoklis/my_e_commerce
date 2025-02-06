@@ -33,12 +33,12 @@ func (s *GoodsServiceImpl) CreateGoods(db *gorm.DB, goods *model.Good) error {
 	return nil
 }
 
-func (s *GoodsServiceImpl) GetGoods(goodsNum uint32) ([]model.Good, error) {
+func (s *GoodsServiceImpl) GetGoods(goodsId uint32) ([]model.Good, error) {
 	db := config.GetDB()
 	goods := []model.Good{}
-	log.Printf("select goods %+v", goodsNum)
+	log.Printf("select goods %+v", goodsId)
 	err := db.Select("id", "goods_num", "goods_name", "price",
-		"pic_url", "seller").Where("goods_num = ?", goodsNum).Find(&goods).Error
+		"pic_url", "seller").Where("id = ?", goodsId).Find(&goods).Error
 	log.Printf("%+v", goods)
 	if err != nil {
 		log.Printf(" err: %+v", err)

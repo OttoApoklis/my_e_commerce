@@ -24,9 +24,11 @@ func (s *StockServiceImpl) SubStock(db *gorm.DB, goodsId uint32, num uint32) (bo
 		Where("goods_id = ? and stock >= ?", goodsId, num).
 		Update("stock", gorm.Expr("stock - ?", num))
 	if tx.Error != nil {
+		log.Printf("更新失败")
 		return false, tx.Error
 	}
 	if tx.RowsAffected == 0 {
+		log.Printf("影响行数为0")
 		return false, nil
 	}
 

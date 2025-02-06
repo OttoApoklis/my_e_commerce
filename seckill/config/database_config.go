@@ -49,42 +49,42 @@ func GetDB() *gorm.DB {
 }
 
 func initDatabase() (*gorm.DB, error) {
-	//once.Do(func() {
-	var config Config
-	file, err := os.Open("config.yaml")
-	if err != nil {
-		log.Print(err)
-	}
-	defer func() {
-		err := recover()
+	once.Do(func() {
+		var config Config
+		file, err := os.Open("config.yaml")
 		if err != nil {
-			log.Printf("err: %+v", err)
+			log.Print(err)
 		}
-	}()
-	defer func() {
-		file.Close()
-	}()
-	decoder := yaml.NewDecoder(file)
-	err = decoder.Decode(&config)
-	if err != nil {
-		log.Print(err)
-	}
-	dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=%s&parseTime=True",
-		config.Database.User, config.Database.Password, config.Database.Host,
-		config.Database.Port, config.Database.Dbname, config.Database.Charset)
-	instance, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Print(err)
-	}
+		defer func() {
+			err := recover()
+			if err != nil {
+				log.Printf("err: %+v", err)
+			}
+		}()
+		defer func() {
+			file.Close()
+		}()
+		decoder := yaml.NewDecoder(file)
+		err = decoder.Decode(&config)
+		if err != nil {
+			log.Print(err)
+		}
+		dsn := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=%s&parseTime=True",
+			config.Database.User, config.Database.Password, config.Database.Host,
+			config.Database.Port, config.Database.Dbname, config.Database.Charset)
+		instance, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Print(err)
+		}
 
-	// 配置连接池
-	sqlDB, err := instance.DB()
-	if err != nil {
-		log.Print(err)
-	}
-	sqlDB.SetMaxOpenConns(100)          // 设置最大打开连接数
-	sqlDB.SetMaxIdleConns(10)           // 设置最大空闲连接数
-	sqlDB.SetConnMaxLifetime(time.Hour) // 设置连接可复用的最大时间
-	//})
+		// 配置连接池
+		sqlDB, err := instance.DB()
+		if err != nil {
+			log.Print(err)
+		}
+		sqlDB.SetMaxOpenConns(100)          // 设置最大打开连接数
+		sqlDB.SetMaxIdleConns(10)           // 设置最大空闲连接数
+		sqlDB.SetConnMaxLifetime(time.Hour) // 设置连接可复用的最大时间
+	})
 	return instance, nil
 }

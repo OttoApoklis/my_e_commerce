@@ -96,7 +96,7 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		false,  // auto - ack
+		true,   // auto - ack
 		false,  // exclusive
 		false,  // no - local
 		false,  // no - wait
@@ -106,7 +106,7 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 		log.Printf("mq err3 : %+v", err)
 	}
 
-	limiter := rate.NewLimiter(limit, 1)
+	limiter := rate.NewLimiter(limit, 10)
 	log.Printf("begin listen mq")
 	for d := range msgs {
 		if limiter.Allow() {
@@ -119,10 +119,10 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 				log.Printf("Failed to unmarshal data : %+v", err)
 			}
 			log.Printf("Received: %+v", data)
-			defer func() {
-				d.Ack(false)
-			}()
 			h.CreateSeckillByRabbitmq(data)
+			//if err = d.Ack(false); err != nil {
+			//	log.Printf("err caused by ack: %v.", err)
+			//}
 		} else {
 			log.Println("Rate limit exceeded, skipping message")
 		}
@@ -130,7 +130,7 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 }
 
 func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
-	// TODO 先去查redis库存数据
+
 	// 读取.lua 文件的内容
 	defer func() {
 		if err := recover(); err != nil {
@@ -151,6 +151,7 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	}
 	ctx := context.Background()
 	log.Println(seckillReq.GoodsID)
+	// 先去查redis库存数据
 	result, err := rdb.Eval(ctx, script, []string{strconv.Itoa(int(seckillReq.GoodsID))}, seckillReq.GoodsAmount).Result()
 	res, ok := result.(int64)
 	if !ok {
@@ -158,7 +159,7 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		return
 	}
 	if res == 0 {
-		log.Printf("扣库存失败， message:%+v", seckillReq)
+		log.Printf("redis扣库存失败， message:%+v", seckillReq)
 		return
 	}
 	if err != nil {

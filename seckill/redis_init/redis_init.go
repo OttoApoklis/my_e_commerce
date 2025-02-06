@@ -24,6 +24,12 @@ func RedisInit() {
 		log.Printf("err : %+v", err)
 	}
 	ctx = context.Background()
+	// 清空redis数据库原有信息防止干扰
+	rdb.FlushDB(ctx).Err()
+	if err != nil {
+		log.Printf("清空redis数据库失败！")
+	}
+	// 将秒杀库存的数据添加到数据库
 	for _, element := range seckillStocks {
 		rdb.Set(ctx, strconv.FormatUint(uint64(*element.GoodsID), 10), element.Stock, 0)
 	}
