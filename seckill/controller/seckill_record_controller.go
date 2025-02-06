@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"my_e_commerce/config"
-	model2 "my_e_commerce/data/req"
+	model2 "my_e_commerce/data/resp"
 	service "my_e_commerce/data/response"
 	service2 "my_e_commerce/service"
 	"my_e_commerce/utils"

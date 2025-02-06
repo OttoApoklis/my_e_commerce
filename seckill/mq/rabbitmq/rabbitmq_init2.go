@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"encoding/json"
 	"log"
-	model "my_e_commerce/data/req"
+	model "my_e_commerce/data/resp"
 	"time"
 
 	"github.com/streadway/amqp"

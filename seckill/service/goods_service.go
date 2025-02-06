@@ -3,8 +3,8 @@ package service
 import (
 	"gorm.io/gorm"
 	model2 "my_e_commerce/data/dal/model"
-	model "my_e_commerce/data/req"
-	"my_e_commerce/data/req/page"
+	model "my_e_commerce/data/resp"
+	"my_e_commerce/data/resp/page"
 )
 
 type GoodsService interface {

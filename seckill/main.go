@@ -1,6 +1,7 @@
 package main
 
 import (
+	"my_e_commerce/Timer"
 	redis_test "my_e_commerce/redis_init"
 	"my_e_commerce/routes"
 	"my_e_commerce/setup_mq"
@@ -15,6 +16,7 @@ const MySQLDSN_USERS = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parse
 func main() {
 	setup_mq.SetupMQ()
 	redis_test.RedisInit()
+	go Timer.RedisTimer()
 	router := routes.SetupRouter()
 	router.Run(":8081")
 }

@@ -3,7 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"log"
-	model "my_e_commerce/data/req"
+	model "my_e_commerce/data/resp"
 
 	"github.com/streadway/amqp"
 )

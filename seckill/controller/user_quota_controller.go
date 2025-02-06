@@ -7,7 +7,7 @@ import (
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 	"my_e_commerce/data/filter"
-	model2 "my_e_commerce/data/req"
+	model2 "my_e_commerce/data/resp"
 	"my_e_commerce/data/response"
 	"my_e_commerce/service"
 )
