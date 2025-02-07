@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	redisOnce sync.Once
+	redisOnce   sync.Once
+	redisClient *redis.Client
+	redisErr    error
 )
 
 type RedisConfig struct {
@@ -26,65 +28,37 @@ type RConfig struct {
 	Redis RedisConfig `yaml:"redis"`
 }
 
-// RedisInstance 包含 redis.Client 实例
-type RedisInstance struct {
-	client *redis.Client
-}
+// GetRedisClient 初始化并返回 Redis 客户端实例（单例模式）
+func GetRedisClient() (*redis.Client, error) {
+	redisOnce.Do(func() {
+		var config RConfig
+		if err := viper.Unmarshal(&config); err != nil {
+			redisErr = fmt.Errorf("unable to decode into struct: %v", err)
+			return
+		}
 
-// GetRedisClient 初始化并返回 Redis 客户端实例
-func GetRedisClient(config RedisConfig) (*redis.Client, error) {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%d", config.Host, config.Port),
-		Username: config.User,
-		Password: config.Password,
-		DB:       config.DB,
+		// 初始化 Redis 客户端
+		redisClient = redis.NewClient(&redis.Options{
+			Addr:     fmt.Sprintf("%s:%d", config.Redis.Host, config.Redis.Port),
+			Username: config.Redis.User,
+			Password: config.Redis.Password,
+			DB:       config.Redis.DB,
+			PoolSize: 20, // 设置连接池大小
+		})
+
+		// 测试连接
+		pong, err := redisClient.Ping(context.Background()).Result()
+		if err != nil {
+			redisErr = fmt.Errorf("failed to connect to Redis: %v", err)
+			return
+		}
+		log.Printf("Redis connected: %s", pong)
 	})
 
-	// 测试连接
-	pong, err := rdb.Ping(context.Background()).Result()
-	if err != nil {
-		return nil, err
-	}
-	log.Printf("Redis connected: %s", pong)
-	return rdb, nil
+	return redisClient, redisErr
 }
 
+// GetRedisConnection 返回 Redis 客户端实例
 func GetRedisConnection() (*redis.Client, error) {
-	var config RConfig
-	var rdb *redis.Client
-	var err error
-	//redisOnce.Do(func() {
-	if err = viper.Unmarshal(&config); err != nil {
-		log.Printf("Unable to decode into struct, %v", err)
-	}
-	rdb, err = GetRedisClient(config.Redis)
-	if err != nil {
-		log.Printf("Failed to initialize Redis client: %v", err)
-	}
-	//})
-	return rdb, err
-}
-
-func example() {
-	var config RConfig
-	if err := viper.Unmarshal(&config); err != nil {
-		log.Printf("Unable to decode into struct, %v", err)
-	}
-	rdb, err := GetRedisClient(config.Redis)
-	if err != nil {
-		log.Printf("Failed to initialize Redis client: %v", err)
-	}
-	ctx := context.Background()
-	// 使用 rdb 进行操作
-	// 示例：设置一个键值对
-	err = rdb.Set(ctx, "key", "value", 0).Err()
-	if err != nil {
-		log.Printf("Failed to set key: %v", err)
-	}
-
-	val, err := rdb.Get(ctx, "key").Result()
-	if err != nil {
-		log.Printf("Failed to get key: %v", err)
-	}
-	fmt.Println("Key value:", val)
+	return GetRedisClient()
 }

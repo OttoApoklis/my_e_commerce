@@ -326,7 +326,7 @@ func (h *SeckillHandler) Buy(c *gin.Context) {
 	err := c.ShouldBind(&seckillBuyReq)
 	if err != nil {
 		log.Printf("bind json err: %+v\n", err)
-		c.JSON(service.ERR_JSON_BIND, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), nil))
+		c.JSON(200, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), nil))
 		return
 	}
 	// 设置秒杀记录状态
