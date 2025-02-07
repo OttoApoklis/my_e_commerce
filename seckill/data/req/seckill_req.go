@@ -12,3 +12,11 @@ type SeckillBuyReq struct {
 type SeckillCancelReq struct {
 	SeckillNum string `json:"seckill_num" gorm:"seckill_num" binding:"required"`
 }
+
+type SeckillRecordGetReq struct {
+	UserID    *uint32                 `json:"user_id" form:"user_id"`       // 用户ID
+	Status    *uint32                 `json:"status"`                       // 状态
+	BeginTime *string                 `json:"begin_time" form:"begin_time"` // 开始时间
+	EndTime   *string                 `json:"end_time"   form:"end_time"`   // 结束时间
+	Order     *map[string]interface{} `json:"order" form:"order"`           // 排序字段
+}

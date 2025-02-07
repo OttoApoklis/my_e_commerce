@@ -10,6 +10,7 @@ type SeckillRecordService interface {
 	UpdateSeckillRecord(seckillRecordReq *model.SeckillRecordReq) error
 	GetSeckillRecordByID(id uint32) ([]model2.SeckillRecord, error)
 	GetSeckillRecord(seckillNum string) ([]*model2.SeckillRecord, error)
+	GetSeckillRecordByUser(seckillGetRecord model.SeckillRecordGetReq) ([]*model2.SeckillRecord, error)
 	SeckillRecordStatusChange(seckillRecordNum string, status uint32) (bool, error)
 	DeleteRedisSeckillRecord(seckillRecordNum string) (bool, error)
 }

@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"log"
 	"my_e_commerce/config"
+	"my_e_commerce/data/dal/model"
 	model2 "my_e_commerce/data/req"
 	service "my_e_commerce/data/response"
 	"my_e_commerce/enum"
@@ -397,5 +398,24 @@ func (h *SeckillHandler) Cancel(c *gin.Context) {
 		return
 	}
 	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), nil))
+	return
+}
+
+func (h *SeckillHandler) GetSeckillRecord(c *gin.Context) {
+	var seckillRecordGetReq model2.SeckillRecordGetReq
+	var seckillRecords []*model.SeckillRecord
+	if err := c.ShouldBind(&seckillRecordGetReq); err != nil {
+		log.Printf("bind json err: %+v\n", err)
+		c.JSON(200, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), seckillRecords))
+		return
+	}
+	log.Printf("seckillRecordGetReq %+v", seckillRecordGetReq)
+	seckillRecords, err := h.seckillRecordService.GetSeckillRecordByUser(seckillRecordGetReq)
+	if err != nil {
+		log.Printf("GetSeckillRecordByUser err caused by: %+v\n", err)
+		c.JSON(200, service.GetResponse(service.ERR_GET_SECKILL_RECORD_FAILED, service.GetErrMsg(service.ERR_GET_SECKILL_RECORD_FAILED), seckillRecords))
+		return
+	}
+	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), seckillRecords))
 	return
 }
