@@ -27,6 +27,8 @@ func SetupRouter() *gin.Engine {
 		orderService, stockService, goodsService)
 	{
 		seckillGroup.POST("/", seckillHandler.CreateSeckill)
+		seckillGroup.POST("/buy", seckillHandler.Buy)
+		seckillGroup.POST("/cancel", seckillHandler.Cancel)
 	}
 
 	userQuotaGroup := router.Group("/userQuota")
@@ -63,7 +65,8 @@ func SetupRouter() *gin.Engine {
 	orderHandler := controller.NewOrderHandler(orderService)
 	{
 		orderGroup.POST("/create", orderHandler.CreateOrder)
-		orderGroup.POST("/get", orderHandler.GetOrder)
+		orderGroup.POST("/get", orderHandler.GetOrderByUser)
+		orderGroup.POST("/getBySeller", orderHandler.GetOrderBySeller)
 		orderGroup.POST("/update", orderHandler.UpdateOrder)
 		orderGroup.POST("/deleteById", orderHandler.DeleteOrderById)
 	}

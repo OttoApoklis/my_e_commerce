@@ -6,7 +6,6 @@ import (
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
-	"my_e_commerce/data/filter"
 	model2 "my_e_commerce/data/req"
 	"my_e_commerce/data/req/page"
 	"my_e_commerce/data/response"
@@ -43,7 +42,7 @@ func (h *GoodsHandler) CreateGoods(c *gin.Context) {
 	}
 	db := config.GetDB()
 	var insertGoods model.Good
-	utils.CopyStruct(newGoods, insertGoods)
+	utils.CopyStruct(&newGoods, &insertGoods)
 	snowCode := utils.GetSnowCode()
 	numPrefix, err := enum.GetNumPrefix(*newGoods.GoodsType)
 	if err != nil {
@@ -80,8 +79,8 @@ func (h *GoodsHandler) CreateGoods(c *gin.Context) {
 }
 
 func (h *GoodsHandler) GetGoods(c *gin.Context) {
-	var filter filter.GoodFilter
-	if err := c.BindJSON(&filter); err != nil {
+	var goodsReq model2.GoodsGetUserReq
+	if err := c.BindJSON(&goodsReq); err != nil {
 		log.Printf("error frorm goods get BindJSON: %+v", err)
 		c.JSON(200,
 			response.GetResponse(
@@ -90,9 +89,9 @@ func (h *GoodsHandler) GetGoods(c *gin.Context) {
 				err.Error()))
 		return
 	}
-	fmt.Printf("\n filter: %+v", filter)
+	fmt.Printf("\n GoodsGetUserReq: %+v", goodsReq)
 	var goodss []model.Good
-	goodss, err := h.goodsService.GetGoods(filter.ID)
+	goodss, err := h.goodsService.GetGoodsByUser(goodsReq)
 	if err != nil {
 		log.Printf("err from get Goods: %+v", err)
 		c.JSON(200,

@@ -1,9 +1,15 @@
 package service
 
-import model "my_e_commerce/data/req"
+import (
+	model2 "my_e_commerce/data/dal/model"
+	model "my_e_commerce/data/req"
+)
 
 type SeckillRecordService interface {
-	CreateSecRecord(service *SeckillRecordService) error
+	CreateSeckillRecord(seckillRecordReq *model.SeckillRecordReq) error
 	UpdateSeckillRecord(seckillRecordReq *model.SeckillRecordReq) error
-	GetSeckillRecord(service *SeckillRecordService) ([]*SeckillRecordService, error)
+	GetSeckillRecordByID(id uint32) ([]model2.SeckillRecord, error)
+	GetSeckillRecord(seckillNum string) ([]*model2.SeckillRecord, error)
+	SeckillRecordStatusChange(seckillRecordNum string, status uint32) (bool, error)
+	DeleteRedisSeckillRecord(seckillRecordNum string) (bool, error)
 }

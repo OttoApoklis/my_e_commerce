@@ -41,6 +41,8 @@ var (
 	SUCCESS_GET_ORDER          = 40007
 	SUCCESS_UPDATE_ORDER       = 40008
 	SUCCESS_DELETE_BY_ID_ORDER = 40009
+	ERR_UPDATE_STATUS_ORDER    = 40010
+	ERR_BUY_ORDER              = 40011
 
 	// quota 5
 	ERR_CREATE_QUOTA_FAILED    = 50001
@@ -123,6 +125,8 @@ var errMsgDic = map[int]string{
 	SUCCESS_GET_ORDER:          "订单获取成功",
 	SUCCESS_UPDATE_ORDER:       "订单更新成功",
 	SUCCESS_DELETE_BY_ID_ORDER: "订单删除成功",
+	ERR_UPDATE_STATUS_ORDER:    "更新订单状态失败",
+	ERR_BUY_ORDER:              "购买失败",
 
 	ERR_CREATE_QUOTA_FAILED:    "限额创建失败",
 	ERR_GET_QUOTA_FAILED:       "限额获取失败",

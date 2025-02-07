@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/shopspring/decimal"
 	"github.com/streadway/amqp"
 	"golang.org/x/net/context"
@@ -13,10 +14,13 @@ import (
 	"my_e_commerce/config"
 	model2 "my_e_commerce/data/req"
 	service "my_e_commerce/data/response"
+	"my_e_commerce/enum"
+	redis_test "my_e_commerce/redis_init"
 	service2 "my_e_commerce/service"
 	"my_e_commerce/utils"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type SeckillHandler struct {
@@ -130,7 +134,6 @@ func (h *SeckillHandler) ReceiveMessage(conn *amqp.Connection, queueName string,
 }
 
 func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
-
 	// 读取.lua 文件的内容
 	defer func() {
 		if err := recover(); err != nil {
@@ -237,10 +240,16 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	orderReq.GoodsID = seckillReq.GoodsID
 	orderReq.GoodsNum = good.GoodsNum
 	orderReq.Price = good.Price.Mul(decimal.NewFromUint64(uint64(seckillReq.GoodsAmount)))
-	orderReq.Status = 0
+	orderReq.Status = enum.SECKILL_ORDER_CREATED
 	orderReq.GoodsAmount = &seckillReq.GoodsAmount
 	orderReq.Buyer = uint32(userID)
 	orderReq.Seller = good.Seller
+	orderNum, err := utils.GetUUID()
+	orderReq.OrderNum = &orderNum
+	if err != nil {
+		log.Printf("getUUID err caused by %v", err)
+		return
+	}
 	fmt.Printf("orderReq : %+v\n", orderReq)
 	_, err = h.orderService.CreateOrder(tx, orderReq)
 
@@ -252,6 +261,43 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		// 恢复redis库存
 		redisAdd(seckillReq)
 		return
+	}
+
+	var seckillRecord model2.SeckillRecordReq
+	utils.CopyStruct(&orderReq, &seckillRecord)
+	seckillRecord.UserID = orderReq.Buyer
+	secNum := strconv.FormatUint(uint64(utils.GetSnowCode()), 10)
+	seckillRecord.SecNum = &secNum
+	seckillRecord.OrderNum = &orderNum
+	seckillRecord.Status = enum.SECKILL_ORDER_CREATED
+	log.Printf("seckillRecord:%v.", &seckillRecord)
+	err = h.seckillRecordService.CreateSeckillRecord(&seckillRecord)
+
+	if err != nil {
+		log.Fatalln("%s\n", service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED))
+		// 回滚数据库
+		tx.Rollback()
+		log.Printf("6恢复redis")
+		// 恢复redis库存
+		redisAdd(seckillReq)
+		return
+	}
+	duration := 15 * time.Minute
+	// 将秒杀号和订单号添加到redis有序集合中
+	members1 := []*redis.Z{}
+	member1 := redis.Z{Score: float64(time.Now().Add(duration).Unix()), Member: *seckillRecord.SecNum}
+	members1 = append(members1, &member1)
+	ok, err = utils.AddToSortedSet(ctx, rdb, redis_test.ZSETKEY_SECKILL_RECORD, members1)
+	if err != nil {
+		log.Printf("AddToSortedSet err caused by %v.", err)
+	}
+
+	members2 := []*redis.Z{}
+	member2 := redis.Z{Score: float64(time.Now().Add(duration).Unix()), Member: *seckillRecord.OrderNum}
+	members2 = append(members2, &member2)
+	ok, err = utils.AddToSortedSet(ctx, rdb, redis_test.ZSETKEY_ORDER, members2)
+	if err != nil {
+		log.Printf("AddToSortedSet err caused by %v.", err)
 	}
 
 	log.Printf("create a seckillOrder SUCCESS!")
@@ -273,13 +319,83 @@ func redisAdd(seckillReq model2.SeckillReq) {
 	rdb.Eval(ctx, script, []string{strconv.Itoa(int(seckillReq.GoodsID))}, seckillReq.GoodsAmount).Result()
 }
 
-func MultiplyFloatsAsDecimals(price float32, amount uint32) float64 {
-	// 将 float64 转换为 Decimal
-	decA := decimal.NewFromFloat(float64(price))
+func (h *SeckillHandler) Buy(c *gin.Context) {
+	/*TODO 付款操作*/
+	var seckillBuyReq model2.SeckillBuyReq
+	err := c.ShouldBind(&seckillBuyReq)
+	if err != nil {
+		log.Printf("bind json err: %+v\n", err)
+		c.JSON(service.ERR_JSON_BIND, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), nil))
+		return
+	}
+	// 设置秒杀记录状态
+	ok, err := h.seckillRecordService.SeckillRecordStatusChange(seckillBuyReq.SeckillNum, enum.SECKILL_ORDER_PAYMENT_SUCCESSFUL)
+	if !ok {
+		c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.ERR_UPDATE_STATUS_ORDER), nil))
+		return
+	}
+	// 根据秒杀号获取秒杀记录，获取订单号
+	log.Printf("seckill %v", seckillBuyReq.SeckillNum)
+	records, err := h.seckillRecordService.GetSeckillRecord(seckillBuyReq.SeckillNum)
+	if err != nil {
+		return
+	}
+	log.Printf("records:%v.", records)
+	orderNum := *records[0].OrderNum
 
-	decB := decimal.NewFromFloat(float64(amount))
-	// 进行乘法运算
-	result := decA.Mul(decB)
+	// 设置订单状态
+	ok, err = h.orderService.OrderStatusChange(orderNum, enum.SECKILL_ORDER_PAYMENT_SUCCESSFUL)
+	if !ok {
+		c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.ERR_UPDATE_STATUS_ORDER), nil))
+		return
+	}
+	// 删除redis记录
+	ok, err = h.seckillRecordService.DeleteRedisSeckillRecord(seckillBuyReq.SeckillNum)
+	if !ok {
+		log.Printf("DeleteRedisSeckillRecord err caused by %v.", err)
+		c.JSON(200, service.GetResponse(service.ERR_BUY_ORDER, service.GetErrMsg(service.ERR_BUY_ORDER), nil))
+		return
+	}
+	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), nil))
+	return
+}
 
-	return result.InexactFloat64()
+func (h *SeckillHandler) Cancel(c *gin.Context) {
+	var seckillCancelReq model2.SeckillCancelReq
+	err := c.ShouldBind(&seckillCancelReq)
+	if err != nil {
+		log.Printf("bind json err: %+v\n", err)
+		c.JSON(service.ERR_JSON_BIND, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), nil))
+		return
+	}
+	// 设置秒杀记录状态
+	ok, err := h.seckillRecordService.SeckillRecordStatusChange(seckillCancelReq.SeckillNum, enum.SECKILL_ORDER_CANCELLED)
+	if !ok {
+		c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.ERR_UPDATE_STATUS_ORDER), nil))
+		return
+	}
+	// 根据秒杀号获取秒杀记录，获取订单号
+	log.Printf("seckill %v", seckillCancelReq.SeckillNum)
+	records, err := h.seckillRecordService.GetSeckillRecord(seckillCancelReq.SeckillNum)
+	if err != nil {
+		return
+	}
+	log.Printf("records:%v.", records)
+	orderNum := *records[0].OrderNum
+
+	// 设置订单状态
+	ok, err = h.orderService.OrderStatusChange(orderNum, enum.SECKILL_ORDER_CANCELLED)
+	if !ok {
+		c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.ERR_UPDATE_STATUS_ORDER), nil))
+		return
+	}
+	// 删除redis记录
+	ok, err = h.seckillRecordService.DeleteRedisSeckillRecord(seckillCancelReq.SeckillNum)
+	if !ok {
+		log.Printf("DeleteRedisSeckillRecord err caused by %v.", err)
+		c.JSON(200, service.GetResponse(service.ERR_BUY_ORDER, service.GetErrMsg(service.ERR_BUY_ORDER), nil))
+		return
+	}
+	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), nil))
+	return
 }

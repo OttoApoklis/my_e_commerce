@@ -17,6 +17,7 @@ func main() {
 	setup_mq.SetupMQ()
 	redis_test.RedisInit()
 	go Timer.RedisTimer()
+	go Timer.OrderRedisTimer()
 	router := routes.SetupRouter()
 	router.Run(":8081")
 }

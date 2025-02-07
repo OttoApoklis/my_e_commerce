@@ -22,6 +22,13 @@ type GoodsGetReq struct {
 	Seller    uint32          `gorm:"column:seller;type:bigint;not null;comment:卖家ID" json:"seller"`                                        // 卖家ID
 }
 
+type GoodsGetUserReq struct {
+	GoodsType *string         `json:"goods_type" gorm:"goods_type"`
+	GoodsName *string         `gorm:"column:goods_name;type:varchar(128);comment:商品名字" json:"goods_name"` // 商品名字
+	Price     decimal.Decimal `gorm:"column:price;type:float;not null;comment:商品单价" json:"price"`         // 商品单价
+	Seller    uint32          `gorm:"column:seller;type:bigint;not null;comment:卖家ID" json:"seller"`      // 卖家ID
+}
+
 type GoodsCreateReq struct {
 	GoodsType *string         `json:"goods_type" form:"goods_type" binding:"required" `  // 商品编号
 	GoodsName *string         `json:"goods_name" form:"goods_name" binding:"required"  ` // 商品名字

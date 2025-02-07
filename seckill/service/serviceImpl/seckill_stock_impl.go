@@ -64,7 +64,7 @@ func (s *SeckillStockServiceImpl) CreateSeckillStock(SeckillStock model.SeckillS
 	fmt.Printf("seckillStockInsert %+v", seckillStockInsert)
 	fmt.Println(seckillStockInsert)
 	tx := db.Save(&seckillStockInsert)
-	utils.RedisSetStock(strconv.FormatUint(uint64(*seckillStockInsert.GoodsID), 10), int(seckillStockInsert.Stock))
+	utils.RedisSetStock(strconv.FormatUint(uint64(*seckillStockInsert.GoodsID), 10), int(seckillStockInsert.Stock), 0)
 	fmt.Printf("affect :%+v", tx.RowsAffected)
 	return seckillStockInsert.ID, tx.Error
 }

@@ -2,12 +2,14 @@ package serviceImpl
 
 import (
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 	model2 "my_e_commerce/data/req"
 	"my_e_commerce/data/req/page"
+	"my_e_commerce/enum"
 )
 
 type GoodsServiceImpl struct {
@@ -33,12 +35,41 @@ func (s *GoodsServiceImpl) CreateGoods(db *gorm.DB, goods *model.Good) error {
 	return nil
 }
 
-func (s *GoodsServiceImpl) GetGoods(goodsId uint32) ([]model.Good, error) {
+func (s *GoodsServiceImpl) GetGoods(goodsID uint32) ([]model.Good, error) {
 	db := config.GetDB()
 	goods := []model.Good{}
-	log.Printf("select goods %+v", goodsId)
-	err := db.Select("id", "goods_num", "goods_name", "price",
-		"pic_url", "seller").Where("id = ?", goodsId).Find(&goods).Error
+	db = db.Select("id", "goods_num", "goods_name", "price",
+		"pic_url", "seller")
+	err := db.Where("id = ?", goodsID).Find(&goods).Error
+	log.Printf("%+v", goods)
+	if err != nil {
+		log.Printf(" err: %+v", err)
+		return nil, err
+	}
+	if goods == nil {
+		log.Printf("Get Goods is nil")
+	}
+	log.Printf("%+v", goods)
+	return goods, nil
+}
+
+func (s *GoodsServiceImpl) GetGoodsByUser(goodsReq model2.GoodsGetUserReq) ([]model.Good, error) {
+	db := config.GetDB()
+	goods := []model.Good{}
+	db = db.Select("id", "goods_num", "goods_name", "price",
+		"pic_url", "seller")
+	if goodsReq.GoodsType != nil {
+		numPrefix, err := enum.GetNumPrefix(*goodsReq.GoodsType)
+		if err != nil {
+			log.Printf("getNumPrefix err caused by %v.", err)
+			return goods, err
+		}
+		db = db.Where("goods_num like ?", fmt.Sprintf("%s%%", numPrefix))
+	}
+	if goodsReq.GoodsName != nil {
+		db = db.Where("goods_name = ?", goodsReq.GoodsName)
+	}
+	err := db.Find(&goods).Error
 	log.Printf("%+v", goods)
 	if err != nil {
 		log.Printf(" err: %+v", err)

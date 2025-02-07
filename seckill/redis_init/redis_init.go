@@ -1,12 +1,18 @@
 package redis_test
 
 import (
+	"github.com/go-redis/redis/v8"
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 	"strconv"
 
 	"golang.org/x/net/context"
+)
+
+var (
+	ZSETKEY_ORDER          = "orderzset"
+	ZSETKEY_SECKILL_RECORD = "seczset"
 )
 
 func RedisInit() {
@@ -33,6 +39,21 @@ func RedisInit() {
 	for _, element := range seckillStocks {
 		go rdb.Set(ctx, strconv.FormatUint(uint64(*element.GoodsID), 10), element.Stock, 0)
 	}
+	createZSet(ctx, rdb)
 	return
 
+}
+
+// 创建有序集合
+func createZSet(ctx context.Context, rdb *redis.Client) {
+
+	err := rdb.ZAdd(ctx, ZSETKEY_ORDER).Err()
+	if err != nil {
+		log.Printf("ZSet err caused by %v.", err)
+	}
+	err = rdb.ZAdd(ctx, ZSETKEY_SECKILL_RECORD).Err()
+	if err != nil {
+		log.Printf("ZSet err caused by %v.", err)
+	}
+	return
 }

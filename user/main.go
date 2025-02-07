@@ -1,71 +1,45 @@
 package main
 
 import (
-	"context"
-	"github.com/gin-gonic/gin"
-	"log"
-	"my_e_commerce/controller"
-	"my_e_commerce/service/serviceImpl"
-	"net"
+	"my_e_commerce/routes"
 	"trpc.group/trpc-go/trpc-go/client"
-	"trpc.group/trpc-go/trpc-go/codec"
-	"trpc.group/trpc-go/trpc-go/server"
 )
 
 // 更新会覆盖原有文件，所以通过 g.GenerateModel("oss", fieldOpts...) 指定需要更新的表，不要全部覆盖
 
 const DBDSN = "root:@(localhost:3306)/seckill?charset=utf8mb4&parseTime=True"
 
-const MySQLDSN_USERS = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parseTime=True&loc=Local"
+//const MySQLDSN_USERS = "root:@(192.168.128.128:3307)/users?charset=utf8mb4&parseTime=True&loc=Local"
 
-//func main() {
-//	//redis.TestRedis()
-//	router := routes.SetupRouter()
-//	router.Run(":8080")
-//}
+func main() {
+	//redis.TestRedis()
+	router := routes.SetupRouter()
+	router.Run(":8080")
+}
 
 type Greet struct{}
 
-func (g *Greet) SayHello(ctx context.Context, req *codec.Message) (*codec.Message, error) {
-	log.Println("Received request from client")
-	resp := codec.Message{
-		Body: []byte("Hello from trpc server"),
-	}
-	return &resp, nil
-}
-
 var trpcClient client.Client
 
-func init() {
-	opts := []client.Option{
-		client.WithNetwork("tcp"),
-		client.WithTarget("127.0.0.1:8082"),
-	}
-	trpcClient = client.DefaultClient
+//func init() {
+//	opts := []client.Option{
+//		client.WithNetwork("tcp"),
+//		client.WithTarget("127.0.0.1:8082"),
+//	}
+//	trpcClient = client.DefaultClient
+//
+//}
 
-}
-
-func main() {
-	addr := "localhost:8080"
-	lis, err := net.Listen("tcp", addr)
-	if err != nil {
-		log.Fatal("failed to listen: %+v", err)
-	}
-	s := server.New(lis)
-	router := gin.Default()
-	userGroup := router.Group("/users")
-	userService := serviceImpl.NewUserServiceImpl()
-	userHandler := controller.NewUserHandler(userService)
-	{
-		userGroup.POST("/save", userHandler.CreateUser)
-		userGroup.POST("/get", userHandler.SelectByUserId)
-		userGroup.POST("/update", userHandler.UpdateUserById)
-	}
-	s.RegisterService("/trpc.test.helloworld.Greeter", &Greet{})
-	if err := s.Serve(); err != nil {
-		log.Printf("failed to server: %+v", err)
-	}
-}
+//func main() {
+//	userGroup := router.Group("/users")
+//	userService := serviceImpl.NewUserServiceImpl()
+//	userHandler := controller.NewUserHandler(userService)
+//	{
+//		userGroup.POST("/save", userHandler.CreateUser)
+//		userGroup.POST("/get", userHandler.SelectByUserId)
+//		userGroup.POST("/update", userHandler.UpdateUserById)
+//	}
+//}
 
 //func main() {
 //	// 配置数据库连接字符串，替换为实际的用户名、密码、数据库名等信息

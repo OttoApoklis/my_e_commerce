@@ -6,8 +6,8 @@ package dal
 
 import (
 	"context"
-
 	"gorm.io/gorm"
+
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/schema"
 

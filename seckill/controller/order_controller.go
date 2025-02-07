@@ -6,7 +6,6 @@ import (
 	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
-	"my_e_commerce/data/filter"
 	model2 "my_e_commerce/data/req"
 	"my_e_commerce/data/response"
 	"my_e_commerce/service"
@@ -59,9 +58,9 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	return
 }
 
-func (h *OrderHandler) GetOrder(c *gin.Context) {
-	var filter filter.OrderFilter
-	if err := c.BindJSON(&filter); err != nil {
+func (h *OrderHandler) GetOrderByUser(c *gin.Context) {
+	var orderGet model2.OrderUserGetReq
+	if err := c.ShouldBind(&orderGet); err != nil {
 		log.Printf("error frorm order get BindJSON: %+v", err)
 		c.JSON(200,
 			response.GetResponse(
@@ -70,11 +69,44 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 				err.Error()))
 		return
 	}
-	fmt.Printf("\n filter: %+v", filter)
+	fmt.Printf("\n filter: %+v", orderGet)
 	var orders []*model.Order
 	var orderReq model2.OrderReq
-	utils.CopyStruct(&filter, &orderReq)
+	utils.CopyStruct(&orderGet, &orderReq)
 	orders, err := h.orderService.GetOrder(orderReq)
+	if err != nil {
+		log.Printf("err from get Order: %+v", err)
+		c.JSON(200,
+			response.GetResponse(
+				response.ERR_GET_ORDER_FAILED,
+				response.GetErrMsg(response.ERR_GET_ORDER_FAILED),
+				err.Error()))
+		return
+	}
+	c.JSON(200,
+		response.GetResponse(
+			response.SUCCESS_GET_ORDER,
+			response.GetErrMsg(response.SUCCESS_GET_ORDER),
+			orders))
+	return
+}
+
+func (h *OrderHandler) GetOrderBySeller(c *gin.Context) {
+	var orderGet model2.OrderSellerGetReq
+	if err := c.ShouldBind(&orderGet); err != nil {
+		log.Printf("error frorm order get BindJSON: %+v", err)
+		c.JSON(200,
+			response.GetResponse(
+				response.ERR_JSON_BIND,
+				response.GetErrMsg(response.ERR_JSON_BIND),
+				err.Error()))
+		return
+	}
+	fmt.Printf("\n filter: %+v", orderGet)
+	var orders []*model.Order
+	var orderReq model2.OrderReq
+	utils.CopyStruct(&orderGet, &orderReq)
+	orders, err := h.orderService.GetOrderBySeller(orderReq)
 	if err != nil {
 		log.Printf("err from get Order: %+v", err)
 		c.JSON(200,

@@ -8,6 +8,7 @@ import (
 	"my_e_commerce/config"
 	model2 "my_e_commerce/data/dal/model"
 	model "my_e_commerce/data/req"
+	"my_e_commerce/enum"
 	"my_e_commerce/utils"
 )
 
@@ -32,10 +33,84 @@ func (s *OrderServiceImpl) UpdateOrder(req model.OrderReq) error {
 	return nil
 }
 
+// db := config.GetDB()
+// orders := []*model2.Order{}
+// condition := map[string]interface{}{}
+// if(order.Buyer!=0){
+//condition["buyer = "] = order.Buyer
+//}
+//if order.GoodsNum!=nil{
+//condition["goods_num like"] = order.GoodsNum
+//}
+// base := dao.NewDB(db)
+// ctx := context.Background()
+// err := base.GetByPage(ctx, "order", orders, condition, "create_time", 10, 1)
+
+//func (s *OrderServiceImpl) GetOrderByUser(order model.OrderReq)([]*model2.Order, error){
+//	db:= config.GetDB()
+//	orders := []*model2.Order{}
+//	base := dao.NewDB(db)
+//	ctx := context.Background()
+//	condition := map[string]interface{}{}
+//	condition["buyer = "] = order.Buyer
+//	if order.GoodsNum!=nil{
+//		condition["goods_num like"] = order.GoodsNum
+//	}
+//	err := base.GetByPage(ctx, "order", orders, )
+//}
+
 func (s *OrderServiceImpl) GetOrder(order model.OrderReq) ([]*model2.Order, error) {
 	db := config.GetDB()
 	orders := []*model2.Order{}
-	err := db.Where("order_num = ?", order.OrderNum).Find(&orders).Error
+	if order.Buyer == 0 {
+		return orders, errors.New("买方id为空")
+	} else {
+		db = db.Where("buyer=?", order.Buyer)
+	}
+	if order.GoodsAmount != nil {
+		db = db.Where("goods_amount=?", order.GoodsAmount)
+	}
+	if order.BeginTime != nil {
+		db = db.Where("create_time>=?", *order.BeginTime)
+	}
+	if order.EndTime != nil {
+		db = db.Where("create_time<=?", *order.EndTime)
+	}
+	if order.GoodsID != 0 {
+		db = db.Where("goods_id = ?", order.GoodsID)
+	}
+	err := db.Find(&orders).Error
+	if err != nil {
+		log.Printf(" err: %+v", err)
+		return nil, err
+	}
+	if orders == nil {
+		log.Printf("Get Order is nil")
+	}
+	return orders, nil
+}
+
+func (s *OrderServiceImpl) GetOrderBySeller(order model.OrderReq) ([]*model2.Order, error) {
+	db := config.GetDB()
+	orders := []*model2.Order{}
+	if order.Seller == 0 {
+		return orders, errors.New("卖方id为空")
+	} else {
+		db = db.Where("seller=?", order.Seller)
+	}
+	if order.GoodsAmount != nil {
+		db = db.Where("goods_amount=?", order.GoodsAmount)
+	}
+	if order.BeginTime != nil {
+		db = db.Where("create_time>=?", *order.BeginTime)
+	}
+	if order.EndTime != nil {
+		db = db.Where("create_time<=?", *order.EndTime)
+	}
+	if order.GoodsID != 0 {
+		db = db.Where("goods_id = ?", order.GoodsID)
+	}
+	err := db.Find(&orders).Error
 	if err != nil {
 		log.Printf(" err: %+v", err)
 		return nil, err
@@ -77,4 +152,24 @@ func (s *OrderServiceImpl) DeleteOrderById(db *gorm.DB, ID uint32) error {
 		log.Printf("error from Orders delete: %+v", err)
 	}
 	return nil
+}
+
+// 修改创建态的订单状态
+func (s *OrderServiceImpl) OrderStatusChange(orderNum string, status uint32) (bool, error) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Printf("err : %+v", err)
+			return
+		}
+	}()
+	db := config.GetDB()
+	res := db.Table("order").Where("order_num = ? and status = ?", orderNum, enum.SECKILL_ORDER_CREATED).Update("status", status)
+	if res.Error != nil {
+		return false, res.Error
+	}
+	if res.RowsAffected == 0 {
+		return false, errors.New("影响行数为0")
+	}
+	return true, nil
 }
