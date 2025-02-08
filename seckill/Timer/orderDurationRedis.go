@@ -44,6 +44,14 @@ func ordertask() {
 		if !ok {
 			log.Printf("SeckillRecordStatusChange err")
 		}
+		// 更新成功就删除这个过期的订单键
+		ok, err := utils.DeleteToSortedSet(ctx, rdb, redis_test.ZSETKEY_SECKILL_RECORD, orderNum)
+		if err != nil {
+			log.Printf("删除redis获取的订单号失败！ caused by:%v", err)
+		}
+		if !ok {
+			log.Printf("删除redis获取的订单号失败！")
+		}
 	}
 	result, err = utils.FindToSortedSet(ctx, rdb, redis_test.ZSETKEY_SECKILL_RECORD, opts)
 	seckillRecordService := serviceImpl.NewSeckillServiceImpl()
@@ -51,7 +59,7 @@ func ordertask() {
 		// 循环更新订单状态
 		seckillRecordNum, ok := res.Member.(string)
 		if !ok {
-			log.Printf("从redis获取的订单号，断言失败！")
+			log.Printf("从redis获取的秒杀号，断言失败！")
 			continue
 		}
 		ok, err = seckillRecordService.SeckillRecordStatusChange(seckillRecordNum, enum.SECKILL_ORDER_TIME_OUT)
@@ -60,6 +68,14 @@ func ordertask() {
 		}
 		if !ok {
 			log.Printf("SeckillRecordStatusChange err")
+		}
+		// 更新成功就删除这个过期的秒杀键
+		ok, err := utils.DeleteToSortedSet(ctx, rdb, redis_test.ZSETKEY_SECKILL_RECORD, seckillRecordNum)
+		if err != nil {
+			log.Printf("删除redis获取的秒杀号失败！ caused by:%v", err)
+		}
+		if !ok {
+			log.Printf("删除redis获取的秒杀号失败！")
 		}
 	}
 	log.Printf("执行订单超时检查redis定时任务 %s", time.Now().Format(time.RFC1123))
