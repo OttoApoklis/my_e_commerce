@@ -20,6 +20,7 @@ type SeckillRecordGetReq struct {
 	BeginTime *string                 `json:"begin_time" form:"begin_time"` // 开始时间
 	EndTime   *string                 `json:"end_time"   form:"end_time"`   // 结束时间
 	Order     *map[string]interface{} `json:"order" form:"order"`           // 排序字段
+	Limit     *int                    `json:"limit" form:"limit"`
 }
 
 type SeckillRecordBySecNumReq struct {

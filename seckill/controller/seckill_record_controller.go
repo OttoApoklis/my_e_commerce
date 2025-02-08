@@ -14,6 +14,7 @@ import (
 	"my_e_commerce/config"
 	"my_e_commerce/data/dal/model"
 	model2 "my_e_commerce/data/req"
+	model3 "my_e_commerce/data/resp"
 	service "my_e_commerce/data/response"
 	"my_e_commerce/enum"
 	redis_test "my_e_commerce/redis_init"
@@ -183,22 +184,24 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		if r := recover(); r != nil {
 			// 回滚数据库
 			tx.Rollback()
-			log.Printf("2恢复redis")
-			// 恢复redis库存
+			log.Printf("2恢复redis并回滚mysql")
+			// 恢复redis并回滚mysql库存
 			redisAdd(seckillReq)
 			log.Printf("err from db: %+v", r)
 		} else {
-			log.Printf("事务提交")
+
 			if err := tx.Commit().Error; err != nil {
 				if !strings.Contains(err.Error(), "transaction has already been committed or rolled back") {
 					// 回滚数据库
 					tx.Rollback()
-					log.Printf("1恢复redis")
-					// 恢复redis库存
+					log.Printf("1恢复redis并回滚mysql")
+					// 恢复redis并回滚mysql库存
 					redisAdd(seckillReq)
 				}
 				log.Printf("Failed to commit transaction: %+v", err)
 				return
+			} else {
+				log.Printf("事务提交")
 			}
 		}
 	}()
@@ -209,8 +212,8 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		log.Printf("this is err , %+v\n", err)
 		// 回滚数据库
 		tx.Rollback()
-		log.Printf("3恢复redis")
-		// 恢复redis库存
+		log.Printf("3恢复redis并回滚mysql")
+		// 恢复redis并回滚mysql库存
 		redisAdd(seckillReq)
 		return
 	}
@@ -218,8 +221,8 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 		log.Printf("%s\n", service.GetErrMsg(service.ERR_DESC_STOCK_FAILED))
 		// 回滚数据库
 		tx.Rollback()
-		log.Printf("4恢复redis")
-		// 恢复redis库存
+		log.Printf("4恢复redis并回滚mysql")
+		// 恢复redis并回滚mysql库存
 		redisAdd(seckillReq)
 		return
 	}
@@ -258,11 +261,11 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	_, err = h.orderService.CreateOrder(tx, orderReq)
 
 	if err != nil {
-		log.Fatalln("%s\n", service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED))
+		log.Printf("%s\n", service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED))
 		// 回滚数据库
 		tx.Rollback()
-		log.Printf("5恢复redis")
-		// 恢复redis库存
+		log.Printf("5恢复redis并回滚mysql")
+		// 恢复redis并回滚mysql库存
 		redisAdd(seckillReq)
 		return
 	}
@@ -277,11 +280,11 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	err = h.seckillRecordService.CreateSeckillRecord(&seckillRecord)
 
 	if err != nil {
-		log.Fatalln("%s\n", service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED))
+		log.Printf("%s\n", service.GetErrMsg(service.ERR_CREATE_ORDER_FAILED))
 		// 回滚数据库
 		tx.Rollback()
-		log.Printf("6恢复redis")
-		// 恢复redis库存
+		log.Printf("6恢复redis并回滚mysql")
+		// 恢复redis并回滚mysql库存
 		redisAdd(seckillReq)
 		return
 	}
@@ -405,7 +408,7 @@ func (h *SeckillHandler) Cancel(c *gin.Context) {
 
 func (h *SeckillHandler) GetSeckillRecord(c *gin.Context) {
 	var seckillRecordGetReq model2.SeckillRecordGetReq
-	var seckillRecords []*model.SeckillRecord
+	var seckillRecords []*model3.SeckillRecordResp
 	if err := c.ShouldBind(&seckillRecordGetReq); err != nil {
 		log.Printf("bind json err: %+v\n", err)
 		c.JSON(200, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), seckillRecords))
@@ -431,7 +434,7 @@ func (h *SeckillHandler) GetSeckillRecordLast(c *gin.Context) {
 		return
 	}
 	log.Printf("seckillRecordGetReq %+v", seckillRecordGetReq)
-	seckillRecords, err := h.seckillRecordService.GetSeckillRecordByUser(seckillRecordGetReq)
+	seckillRecords, err := h.seckillRecordService.GetSeckillRecordByUserLast(seckillRecordGetReq)
 	if err != nil {
 		log.Printf("GetSeckillRecordByUser err caused by: %+v\n", err)
 		c.JSON(200, service.GetResponse(service.ERR_GET_SECKILL_RECORD_FAILED, service.GetErrMsg(service.ERR_GET_SECKILL_RECORD_FAILED), seckillRecords))
