@@ -1,6 +1,7 @@
 package setup_mq
 
 import (
+	"log"
 	"my_e_commerce/config"
 	"my_e_commerce/controller"
 	"my_e_commerce/service/serviceImpl"
@@ -16,5 +17,18 @@ func SetupMQ() {
 	goodsService := serviceImpl.NewGoodsServiceImpl()
 	seckillHandler := controller.NewSeckillHanlder(seckillRecordService,
 		orderService, stockService, goodsService)
-	go seckillHandler.ReceiveMessage(config.GetRabbitmqConnection(), "seckill", rate.Limit(1*time.Second))
+	connPool, err := config.GetRabbitmqConnectionPool(1)
+	if err != nil {
+		log.Fatal("GetRabbitmqConnectionPool err caused by %v", err)
+	}
+	// 获取连接
+	conn, err := connPool.GetRabbitmqConn()
+	if err != nil {
+		log.Fatal("GetRabbitmqConn err caused by %v", err)
+	}
+	defer func() {
+		// 回收连接
+		connPool.PutRabbitmqConn(conn)
+	}()
+	go seckillHandler.ReceiveMessage(conn, "seckill", rate.Limit(1*time.Second))
 }

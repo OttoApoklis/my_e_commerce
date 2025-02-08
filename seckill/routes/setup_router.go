@@ -30,6 +30,8 @@ func SetupRouter() *gin.Engine {
 		seckillGroup.POST("/buy", seckillHandler.Buy)
 		seckillGroup.POST("/cancel", seckillHandler.Cancel)
 		seckillGroup.POST("/get", seckillHandler.GetSeckillRecord)
+		seckillGroup.POST("/getLast", seckillHandler.GetSeckillRecordLast)
+		seckillGroup.POST("/getBySecNum", seckillHandler.GetSeckillRecordBySecNum)
 	}
 
 	userQuotaGroup := router.Group("/userQuota")

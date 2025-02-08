@@ -65,12 +65,11 @@ func (h *SeckillHandler) CreateSeckill(c *gin.Context) {
 	if seckillReq.GoodsAmount <= 0 {
 		c.JSON(service.ERR_INPUT_INVALID, service.GetResponse(service.ERR_INPUT_INVALID, service.GetErrMsg(service.ERR_INPUT_INVALID), nil))
 	}
-	dsn := config.GetRabbitmqDSN()
-	conn, _ := amqp.Dial(dsn)
-
-	utils.SendMessageOnce(conn, "seckill", seckillReq)
+	secNum := strconv.FormatUint(uint64(utils.GetSnowCode()), 10)
+	seckillReq.SecNum = &secNum
+	utils.SendMessageOnce("seckill", seckillReq)
 	// TODO 创建秒杀单
-	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), nil))
+	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), secNum))
 	return
 
 }
@@ -141,6 +140,10 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 			log.Printf("ERROR recover: %s", err)
 		}
 	}()
+	if seckillReq.SecNum == nil {
+		log.Println("secNum is nil!")
+		return
+	}
 	userID := 1
 	scriptBytes, err := ioutil.ReadFile("./lua/redis_substock.lua")
 	if err != nil {
@@ -267,8 +270,7 @@ func (h *SeckillHandler) CreateSeckillByRabbitmq(seckillReq model2.SeckillReq) {
 	var seckillRecord model2.SeckillRecordReq
 	utils.CopyStruct(&orderReq, &seckillRecord)
 	seckillRecord.UserID = orderReq.Buyer
-	secNum := strconv.FormatUint(uint64(utils.GetSnowCode()), 10)
-	seckillRecord.SecNum = &secNum
+	seckillRecord.SecNum = seckillReq.SecNum
 	seckillRecord.OrderNum = &orderNum
 	seckillRecord.Status = enum.SECKILL_ORDER_CREATED
 	log.Printf("seckillRecord:%v.", &seckillRecord)
@@ -411,6 +413,48 @@ func (h *SeckillHandler) GetSeckillRecord(c *gin.Context) {
 	}
 	log.Printf("seckillRecordGetReq %+v", seckillRecordGetReq)
 	seckillRecords, err := h.seckillRecordService.GetSeckillRecordByUser(seckillRecordGetReq)
+	if err != nil {
+		log.Printf("GetSeckillRecordByUser err caused by: %+v\n", err)
+		c.JSON(200, service.GetResponse(service.ERR_GET_SECKILL_RECORD_FAILED, service.GetErrMsg(service.ERR_GET_SECKILL_RECORD_FAILED), seckillRecords))
+		return
+	}
+	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), seckillRecords))
+	return
+}
+
+func (h *SeckillHandler) GetSeckillRecordLast(c *gin.Context) {
+	var seckillRecordGetReq model2.SeckillRecordGetReq
+	var seckillRecords []*model.SeckillRecord
+	if err := c.ShouldBind(&seckillRecordGetReq); err != nil {
+		log.Printf("bind json err: %+v\n", err)
+		c.JSON(200, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), seckillRecords))
+		return
+	}
+	log.Printf("seckillRecordGetReq %+v", seckillRecordGetReq)
+	seckillRecords, err := h.seckillRecordService.GetSeckillRecordByUser(seckillRecordGetReq)
+	if err != nil {
+		log.Printf("GetSeckillRecordByUser err caused by: %+v\n", err)
+		c.JSON(200, service.GetResponse(service.ERR_GET_SECKILL_RECORD_FAILED, service.GetErrMsg(service.ERR_GET_SECKILL_RECORD_FAILED), seckillRecords))
+		return
+	}
+	c.JSON(200, service.GetResponse(service.SUCCESS, service.GetErrMsg(service.SUCCESS), seckillRecords))
+	return
+}
+
+func (h *SeckillHandler) GetSeckillRecordBySecNum(c *gin.Context) {
+	var seckillRecordGetReq model2.SeckillRecordBySecNumReq
+	var seckillRecords []*model.SeckillRecord
+	if err := c.ShouldBind(&seckillRecordGetReq); err != nil {
+		log.Printf("bind json err: %+v\n", err)
+		c.JSON(200, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), seckillRecords))
+		return
+	}
+	if seckillRecordGetReq.SecNum == nil {
+		c.JSON(200, service.GetResponse(service.ERR_SECNUM_IS_NIL, service.GetErrMsg(service.ERR_SECNUM_IS_NIL), nil))
+		return
+	}
+	log.Printf("seckillRecordGetReq %+v", seckillRecordGetReq)
+	seckillRecords, err := h.seckillRecordService.GetSeckillRecordBySecNum(seckillRecordGetReq)
 	if err != nil {
 		log.Printf("GetSeckillRecordByUser err caused by: %+v\n", err)
 		c.JSON(200, service.GetResponse(service.ERR_GET_SECKILL_RECORD_FAILED, service.GetErrMsg(service.ERR_GET_SECKILL_RECORD_FAILED), seckillRecords))

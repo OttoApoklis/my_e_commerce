@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"log"
+	"my_e_commerce/config"
 	model "my_e_commerce/data/req"
 
 	"github.com/streadway/amqp"
@@ -15,7 +16,14 @@ func failOnError(err error, msg string) {
 }
 
 // 发送函数
-func SendMessageOnce(conn *amqp.Connection, queueName string, data model.SeckillReq) {
+func SendMessageOnce(queueName string, data model.SeckillReq) {
+	connPool, err := config.GetRabbitmqConnectionPool(100)
+	// 获取连接
+	conn, err := connPool.GetRabbitmqConn()
+	defer func() {
+		// 回收连接
+		connPool.PutRabbitmqConn(conn)
+	}()
 	ch, err := conn.Channel()
 	failOnError(err, "Failed to open a channel")
 	defer ch.Close()

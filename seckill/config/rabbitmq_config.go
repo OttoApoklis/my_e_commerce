@@ -9,11 +9,19 @@ import (
 	"sync"
 )
 
+// 连接池结构体
+type RabbitMQConnectionPool struct {
+	pool    chan *amqp.Connection
+	factory func() (*amqp.Connection, error)
+	size    int
+	mu      sync.Mutex
+}
+
 var (
-	conn               *amqp.Connection
 	dsn                string
-	rabbitmqOnce       sync.Once
 	rabbitmqGetDSNOnce sync.Once
+	rabbitmqPool       *RabbitMQConnectionPool
+	rabbitmqPoolOnce   sync.Once
 )
 
 type RabbitmqConfig struct {
@@ -28,6 +36,7 @@ type RabbitMQConfig struct {
 	Rabbitmq RabbitmqConfig `yaml:"rabbitmq"`
 }
 
+// 获取 RabbitMQ DSN
 func GetRabbitmqDSN() string {
 	rabbitmqGetDSNOnce.Do(func() {
 		var config RabbitMQConfig
@@ -37,14 +46,12 @@ func GetRabbitmqDSN() string {
 			log.Print(err)
 		}
 		defer func() {
-			err := recover()
-			if err != nil {
-				log.Printf("err: %+v", err)
+			if r := recover(); r != nil {
+				log.Printf("err: %+v", r)
 			}
 		}()
-		defer func() {
-			file.Close()
-		}()
+		defer file.Close()
+
 		decoder := yaml.NewDecoder(file)
 		err = decoder.Decode(&config)
 		if err != nil {
@@ -57,16 +64,58 @@ func GetRabbitmqDSN() string {
 	return dsn
 }
 
-func GetRabbitmqConnection() *amqp.Connection {
-	var conn *amqp.Connection
-	dsn = GetRabbitmqDSN()
-	//rabbitmqOnce.Do(func() {
-	conn, err := amqp.Dial(dsn)
-	if err != nil {
-		log.Printf("Failed to connect to RabbitMQ: %s", err)
+// 创建连接池
+func NewRabbitMQConnectionPool(size int) (*RabbitMQConnectionPool, error) {
+	dsn := GetRabbitmqDSN()
+	factory := func() (*amqp.Connection, error) {
+		return amqp.Dial(dsn)
 	}
-	log.Printf("mq connection is open")
-	defer conn.Close()
-	//})
-	return conn
+	pool := make(chan *amqp.Connection, size)
+	for i := 0; i < size; i++ {
+		conn, err := factory()
+		if err != nil {
+			return nil, err
+		}
+		pool <- conn
+	}
+	return &RabbitMQConnectionPool{
+		pool:    pool,
+		factory: factory,
+		size:    size,
+	}, nil
+}
+
+// 从连接池获取连接
+func (p *RabbitMQConnectionPool) GetRabbitmqConn() (*amqp.Connection, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	select {
+	case conn := <-p.pool:
+		return conn, nil
+	default:
+		return p.factory()
+	}
+}
+
+// 将连接归还到连接池
+func (p *RabbitMQConnectionPool) PutRabbitmqConn(conn *amqp.Connection) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if len(p.pool) < p.size {
+		p.pool <- conn
+	} else {
+		conn.Close()
+	}
+}
+
+// 获取 RabbitMQ 连接池
+func GetRabbitmqConnectionPool(size int) (*RabbitMQConnectionPool, error) {
+	var err error
+	rabbitmqPoolOnce.Do(func() {
+		rabbitmqPool, err = NewRabbitMQConnectionPool(size)
+		if err != nil {
+			log.Printf("Failed to create RabbitMQ connection pool: %s", err)
+		}
+	})
+	return rabbitmqPool, err
 }

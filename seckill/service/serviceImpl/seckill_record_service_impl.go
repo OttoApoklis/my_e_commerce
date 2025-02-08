@@ -180,3 +180,60 @@ func (s *SeckillServiceImpl) GetSeckillRecordByUser(seckillGetRecord model.Secki
 	}
 	return seckillRecords, nil
 }
+
+func (s *SeckillServiceImpl) GetSeckillRecordByUserLast(seckillGetRecord model.SeckillRecordGetReq) ([]*model2.SeckillRecord, error) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Printf("err: %+v", err)
+		}
+	}()
+	db := config.GetDB()
+	var seckillRecords []*model2.SeckillRecord
+	if seckillGetRecord.UserID != nil {
+		db = db.Where("user_id = ?", *seckillGetRecord.UserID)
+	} else {
+		return seckillRecords, errors.New("用户id缺失")
+	}
+	if seckillGetRecord.Status != nil {
+		db = db.Where("status = ?", *seckillGetRecord.Status)
+	}
+	if seckillGetRecord.BeginTime != nil {
+		db = db.Where("create_time >= ?", seckillGetRecord.BeginTime)
+	}
+	if seckillGetRecord.EndTime != nil {
+		db = db.Where("end_time <= ?", seckillGetRecord.EndTime)
+	}
+	if seckillGetRecord.Order != nil {
+		orders := seckillGetRecord.Order
+		for order := range *orders {
+			db = db.Order(fmt.Sprintf("%s desc", order))
+		}
+	}
+	if err := db.Limit(1).Find(&seckillRecords).Error; err != nil {
+		log.Printf("查询秒杀记录失败！")
+		return seckillRecords, err
+	}
+	return seckillRecords, nil
+}
+
+func (s *SeckillServiceImpl) GetSeckillRecordBySecNum(seckillGetRecord model.SeckillRecordBySecNumReq) ([]*model2.SeckillRecord, error) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			log.Printf("err: %+v", err)
+		}
+	}()
+	db := config.GetDB()
+	var seckillRecords []*model2.SeckillRecord
+	if seckillGetRecord.SecNum != nil {
+		db = db.Where("sec_num = ?", *seckillGetRecord.SecNum)
+	} else {
+		return seckillRecords, errors.New("找不到秒杀单！")
+	}
+	if err := db.Limit(1).Find(&seckillRecords).Error; err != nil {
+		log.Printf("查询秒杀记录失败！")
+		return seckillRecords, err
+	}
+	return seckillRecords, nil
+}

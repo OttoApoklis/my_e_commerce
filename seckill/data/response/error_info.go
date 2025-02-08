@@ -65,6 +65,7 @@ var (
 	SUCCESS_GET_SECKILL_RECORD          = 60007
 	SUCCESS_UPDATE_SECKILL_RECORD       = 60008
 	SUCCESS_DELETE_BY_ID_SECKILL_RECORD = 60009
+	ERR_SECNUM_IS_NIL                   = 60010
 
 	// seckill_stock 7
 	ERR_CREATE_SECKILL_STOCK_FAILED    = 70001
@@ -147,6 +148,7 @@ var errMsgDic = map[int]string{
 	SUCCESS_GET_SECKILL_RECORD:          "秒杀记录获取成功",
 	SUCCESS_UPDATE_SECKILL_RECORD:       "秒杀记录更新成功",
 	SUCCESS_DELETE_BY_ID_SECKILL_RECORD: "秒杀记录删除成功",
+	ERR_SECNUM_IS_NIL:                   "秒杀记录没有秒杀号",
 
 	ERR_CREATE_SECKILL_STOCK_FAILED:    "秒杀库存创建失败",
 	ERR_GET_SECKILL_STOCK_FAILED:       "秒杀库存获取失败",
