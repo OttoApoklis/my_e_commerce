@@ -59,12 +59,12 @@ func (h *SeckillHandler) CreateSeckill(c *gin.Context) {
 	err := c.BindJSON(&seckillReq)
 	if err != nil {
 		log.Printf("bind json err: %+v\n", err)
-		c.JSON(service.ERR_JSON_BIND, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), nil))
+		c.JSON(200, service.GetResponse(service.ERR_JSON_BIND, service.GetErrMsg(service.ERR_JSON_BIND), nil))
 		return
 	}
 	// 校验参数
 	if seckillReq.GoodsAmount <= 0 {
-		c.JSON(service.ERR_INPUT_INVALID, service.GetResponse(service.ERR_INPUT_INVALID, service.GetErrMsg(service.ERR_INPUT_INVALID), nil))
+		c.JSON(200, service.GetResponse(service.ERR_INPUT_INVALID, service.GetErrMsg(service.ERR_INPUT_INVALID), nil))
 	}
 	secNum := strconv.FormatUint(uint64(utils.GetSnowCode()), 10)
 	seckillReq.SecNum = &secNum

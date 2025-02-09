@@ -121,7 +121,7 @@ func (h *GoodsHandler) GetGoodsInPage(c *gin.Context) {
 		return
 	}
 	var goodsPage page.GoodsRespPage
-	goodsPage, err := h.goodsService.GetGoodsInPage(req.GoodsNum, req.PageSize, req.PageNum)
+	goodsPage, err := h.goodsService.GetGoodsInPage(req)
 	if err != nil {
 		log.Printf("err from get Goods: %+v", err)
 		c.JSON(200,

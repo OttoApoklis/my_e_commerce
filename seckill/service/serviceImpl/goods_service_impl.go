@@ -10,6 +10,8 @@ import (
 	model2 "my_e_commerce/data/req"
 	"my_e_commerce/data/req/page"
 	"my_e_commerce/enum"
+	"strconv"
+	"strings"
 )
 
 type GoodsServiceImpl struct {
@@ -82,34 +84,101 @@ func (s *GoodsServiceImpl) GetGoodsByUser(goodsReq model2.GoodsGetUserReq) ([]mo
 	return goods, nil
 }
 
-func (s *GoodsServiceImpl) GetGoodsInPage(goodsNum *string, size uint32, offset uint32) (page.GoodsRespPage, error) {
-	db := config.GetDB()
-	if size < 1 {
-		size = 10
-	}
-	if offset < 0 {
-		offset = 0
-	}
-	goods := []model.Good{}
+func (s *GoodsServiceImpl) GetGoodsInPage(req model2.GoodsGetPageReq) (page.GoodsRespPage, error) {
+	db1 := config.GetDB()
+	var (
+		offset uint32
+		size   uint32
+	)
 	var goodsRespPage page.GoodsRespPage
-	temp := *goodsNum
-	temp += "%"
-	goodsNum = &temp
+
+	if req.PageSize == 0 {
+		size = 10
+	} else {
+		size = req.PageSize
+	}
+	if req.PageNum == 0 {
+		offset = 0
+		goodsRespPage.PageNumber = 1
+	} else {
+		goodsRespPage.PageNumber = offset + 1
+		offset = (req.PageNum - 1) * size
+		log.Printf("offset %d", offset)
+	}
+	sql := strings.Builder{}
+	sql.WriteString("select count(*) from goods ")
+	var where1 *string
+	var where2 *string
+	if req.GoodsType != nil {
+		prefix, err := enum.GetNumPrefix(*req.GoodsType)
+		if err != nil {
+			log.Printf("GetNumPrefix err caused by %v", err)
+		}
+		where1 = &prefix
+	}
+	if req.GoodsName != nil {
+		str := "goods_name like \"" + *req.GoodsName + "%\""
+		where2 = &str
+	}
+	if where1 != nil || where2 != nil {
+		sql.WriteString("where ")
+		if where1 != nil {
+			sql.WriteString(*where1)
+		}
+		if where2 != nil {
+			sql.WriteString(*where2)
+		}
+	}
+	log.Printf("sql %s", sql.String())
+	goods := []model.Good{}
+
 	var total uint32
-	err := db.Raw("select 1 from goods where goods_num like ?", goodsNum).Find(&total).Error
+	err := db1.Raw(sql.String()).Scan(&total).Error
 	if err != nil {
 		log.Printf("err from GetGoodsInPage select total, err: %+v", err)
 	}
 	goodsRespPage.TotalPages = total / size
+	if total%size > 0 {
+		goodsRespPage.TotalPages++
+	}
 	goodsRespPage.PageSize = size
-	goodsRespPage.PageNumber = offset + 1
-	if total <= size*(offset-1) {
+
+	log.Printf("total: %d", total)
+	if offset != 0 && total < offset {
 		log.Printf("no data in this page from GetGoodsInPage")
 		return goodsRespPage, nil
 	}
+	db2 := config.GetDB()
+	sql2 := strings.Builder{}
+	sql2.WriteString("select * from goods ")
+	db2 = db2.Table("goods")
+	if where1 != nil || where2 != nil {
+		sql2.WriteString("where ")
+		if where1 != nil {
+			sql2.WriteString(*where1)
+		}
+		if where2 != nil {
+			sql2.WriteString(*where2)
+		}
+	}
 
-	err = db.Select("id", "goods_num", "goods_name", "price",
-		"pic_url", "seller").Where("goods_num like ?", goodsNum).Find(&goods).Limit(int(size)).Offset(int(offset)).Error
+	log.Printf("sql2 %s", sql2.String())
+	log.Printf("offset")
+	log.Println(offset)
+	log.Println(int(offset))
+	//if offset != 0 {
+	//	sql2.WriteString(" offset " + strconv.Itoa(int(offset)))
+	//}
+	//if size != 0 {
+	//	sql2.WriteString(" limit " + strconv.Itoa(int(size)))
+	//}
+	sql2.WriteString(" limit " + strconv.Itoa(int(offset)) + "," + strconv.Itoa(int(size)))
+
+	err = db2.Raw(sql2.String()).Find(&goods).Error
+
+	if err != nil {
+		log.Printf("err from GetGoodsInPage, err: %+v", err)
+	}
 	goodsRespPage.Data = goods
 	return goodsRespPage, nil
 }
